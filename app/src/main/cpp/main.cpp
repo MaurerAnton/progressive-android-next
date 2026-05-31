@@ -451,9 +451,9 @@ static void renderServerSelect(){
     rct(G.w*0.05f,y,G.w*0.9f,1.0f,Vec4{C_DIVIDER});
     y+=4.0f*G.dp;
     /* Profile avatar placeholder (top right) */
-    float avR=18.0f*G.dp,avX=G.w-avR*2-8.0f,avY=G.h*0.02f+avR*2+12.0f*G.dp;
-    rrct(avX,avY,avR*2,avR*2,avR,Vec4{0.45f,0.35f,0.70f,1.0f});
-    txt(avX+avR-msr("U",11.0f*G.dp)*0.5f,avY+avR+4.0f,"U",11.0f*G.dp,Vec4{C_WHITE},1.0f);
+    float avR=20.0f*G.dp,avX=G.w-avR*2-8.0f,avY=G.h*0.02f+avR*2+8.0f*G.dp;
+    rrct(avX,avY,avR*2,avR*2,avR,Vec4{0.50f,0.40f,0.78f,1.0f});
+    txt(avX+avR-msr("U",12.0f*G.dp)*0.5f,avY+avR+5.0f,"U",12.0f*G.dp,Vec4{C_WHITE},1.0f);
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.13f;
@@ -504,7 +504,7 @@ static void renderServerSelect(){
     /* Use stored selection if set */
     if(G.login.selProtocol>=0&&G.login.selProtocol<nCards)selectedCard=G.login.selProtocol;
     for(int i=0;i<nCards;i++){
-        float alpha=cards[i].dim?0.55f:1.0f;
+        float alpha=cards[i].dim?0.65f:1.0f;
         bool sel=(i==selectedCard);
         float h=cardH,bonus=0;
         if(sel){bonus=16.0f*G.dp;h+=bonus;} /* selected card taller */
