@@ -1233,9 +1233,13 @@ static void renderChat(){
                 else if(strstr(word,"http"))wc=Vec4{C_CYAN};
                 else if(word[0]=='*'&&word[strlen(word)-1]=='*')wc=Vec4{0.95f,0.95f,1.0f,1.0f};
                 txt(lx,ly+lh*0.75f,word,tsz,wc,1.05f);}
-            /* Edited indicator */
+            /* Edited/E2E indicators */
             if(m.type==8){ /* edited */
                 txt(bx+bw-msr("(edited)",9.0f*G.dp)-8.0f,ly+lh*0.2f,"(edited)",9.0f*G.dp,Vec4{C_HINT});
+            }
+            /* E2E padlock for encrypted messages */
+            if(m.threadCount<0){ /* use negative threadCount as E2E flag hack */
+                txt(bx+bw-msr("E",9.0f*G.dp)-8.0f,ly+lh*0.2f,"E",9.0f*G.dp,Vec4{C_GREEN});
             }
             /* Delivery/read checkmark for own messages */
             if(m.nick&&strcmp(m.nick,"me")==0){
