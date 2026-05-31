@@ -343,9 +343,9 @@ static void renderOnboard(){
         float iw=G.w*0.70f,ih=G.w*0.45f,ix=(G.w-iw)*0.5f,iyy=G.h*0.06f;
         sprite(ix,iyy,iw,ih,G.texCar[page]);
     }
-    /* Page indicator dots - below image */
-    float dotR=4.0f*G.dp,dotGap=12.0f*G.dp,dotW=nPages*(dotR*2+dotGap)-dotGap;
-    float dotX=(G.w-dotW)*0.5f,dotY=G.h*0.58f;
+    /* Page indicator dots - above buttons */
+    float dotR=5.0f*G.dp,dotGap=16.0f*G.dp,dotW=nPages*(dotR*2+dotGap)-dotGap;
+    float dotX=(G.w-dotW)*0.5f,dotY=G.h*0.72f;
     for(int i=0;i<nPages;i++){
         rrct(dotX+i*(dotR*2+dotGap),dotY,dotR*2,dotR*2,dotR,
             i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
