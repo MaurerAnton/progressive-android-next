@@ -319,7 +319,7 @@ static void layoutUI(){
             G.btns[G.nb++]=mkB(8,78,50,40,"<",Vec4{C_DARK}); /* back - below status bar */
             G.btns[G.nb++]=mkB(62,78,50,40,"#",Vec4{C_DARK}); /* drawer toggle */
             G.btns[G.nb++]=mkB(G.w-58,78,50,40,"Q",Vec4{C_DARK}); /* search */
-            G.btns[G.nb++]=mkB(G.w-116,78,50,40,"v",Vec4{C_DARK}); /* scroll down */
+            G.btns[G.nb++]=mkB(G.w-136,78,70,40,"VVV",Vec4{C_DARK}); /* scroll down */
             float dy=60.0f;
             for(size_t i=0;i<G.rooms.size();i++){
                 G.btns[G.nb++]=mkB(0,dy,G.dw,44,G.rooms[i].name,
