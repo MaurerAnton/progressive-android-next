@@ -405,30 +405,15 @@ static void renderServerSelect(){
         y+=cardH+cardGap;
     }
 
-    /* === ONBOARDING AT BOTTOM === */
-    y+=8.0f*G.dp;
+    /* === BOTTOM BUTTONS === */
+    y+=16.0f*G.dp;
     rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
-    y+=10.0f*G.dp;
-
-    struct{const char*title;}pages[]={
-        {"Own your conversations."},{"You're in control."},
-        {"Secure messaging."},{"Messaging for your team."},
-    };
-    float is=G.w*0.12f;
-    if(G.texCar[page])sprite(pad+4.0f,y,is,is,G.texCar[page]);
-    float tsz=14.0f*G.dp;
-    txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
-    y+=is+4.0f*G.dp;
-
-    float dotR=6.0f*G.dp,dotGap=10.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
-    for(int i=0;i<4;i++)
-        rct(dotX+i*(dotR*2+dotGap),y,dotR*2,dotR*2,i==page?Vec4{0.36f,0.77f,0.90f,1.0f}:Vec4{0.25f,0.25f,0.32f,1.0f});
-    y+=dotR*2+12.0f*G.dp;
+    y+=16.0f*G.dp;
 
     float btnW=fw*0.48f,btnH=36.0f*G.dp;
     G.btns[0].rect={pad,y,btnW,btnH};G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],12.0f*G.dp);
     G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};btn(G.btns[1],12.0f*G.dp);
-    y+=btnH+6.0f*G.dp;
+    y+=btnH+8.0f*G.dp;
     G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};btn(G.btns[2],12.0f*G.dp);
 
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
