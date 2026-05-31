@@ -444,17 +444,25 @@ static void renderServerSelect(){
     };
     int nCards=6;
     Card* cards=openSrc?openCards:propCards;
+    int selectedCard=-1;for(int i=0;i<nCards;i++)if(!cards[i].dim){selectedCard=i;break;}
     for(int i=0;i<nCards;i++){
         float alpha=cards[i].dim?0.55f:1.0f;
-        rct(pad,y,fw,cardH,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
-        rct(pad,y,3.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+10.0f*G.dp,y+6.0f*G.dp,38.0f*G.dp,38.0f*G.dp,10.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
-        txt(pad+56.0f*G.dp,y+14.0f*G.dp,cards[i].title,12.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+56.0f*G.dp,y+32.0f*G.dp,cards[i].desc,10.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-70.0f,y+14.0f*G.dp,"Soon",9.0f*G.dp,Vec4{C_LABEL});
-        G.btns[6+i].rect={pad,y,fw,cardH};
+        float h=cardH,bonus=0;
+        if(i==selectedCard){bonus=16.0f*G.dp;h+=bonus;} /* selected card taller */
+        else{h-=8.0f*G.dp;} /* other cards smaller */
+        rct(pad,y,fw,h,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
+        rct(pad,y,3.0f,h,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
+        float isz=i==selectedCard?48.0f*G.dp:32.0f*G.dp;
+        float iy=i==selectedCard?y+10.0f*G.dp:y+4.0f*G.dp;
+        rrct(pad+10.0f*G.dp,iy,isz,isz,isz*0.26f,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
+        float tsz=i==selectedCard?14.0f*G.dp:11.0f*G.dp;
+        float dszi=i==selectedCard?11.0f*G.dp:9.0f*G.dp;
+        txt(pad+isz+20.0f*G.dp,y+bonus*0.4f+isz*0.35f,cards[i].title,tsz,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+isz+20.0f*G.dp,y+bonus*0.4f+isz*0.75f,cards[i].desc,dszi,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-70.0f,y+bonus*0.4f+isz*0.35f,"Soon",9.0f*G.dp,Vec4{C_LABEL});
+        G.btns[6+i].rect={pad,y,fw,h};
         G.btns[6+i].color=cards[i].accent;
-        y+=cardH+cardGap;
+        y+=h+cardGap;
     }
 
     /* === BOTTOM BUTTONS === */
