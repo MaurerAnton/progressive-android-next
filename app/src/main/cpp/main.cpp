@@ -237,10 +237,11 @@ static void layoutUI(){
     G.nb=0;
     switch(G.screen){
         case SCR_SERVER: G.nb=8; break; /* 2 chips + 6 protocol cards */
-        case SCR_MATRIX: G.nb=2; break;
-        case SCR_IRC: G.nb=2; break;
+        case SCR_MATRIX: G.nb=3; break; /* back + sign in + create account */
+        case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_CHAT:{
-            G.btns[G.nb++]=mkB(6,6,42,42,"#",Vec4{C_DARK});
+            G.btns[G.nb++]=mkB(6,6,42,42,"<",Vec4{C_DARK}); /* back */
+            G.btns[G.nb++]=mkB(52,6,42,42,"#",Vec4{C_DARK}); /* drawer toggle */
             float dy=60.0f;
             for(size_t i=0;i<G.rooms.size();i++){
                 G.btns[G.nb++]=mkB(0,dy,G.dw,44,G.rooms[i].name,
@@ -252,69 +253,73 @@ static void layoutUI(){
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
 static void renderServerSelect(){
-    float pad=G.w*0.06f,fw=G.w*0.88f,cardH=64.0f,cardGap=6.0f;
-    float chipH=34.0f,titleTotal=60.0f+28.0f+24.0f+18.0f+12.0f;
-    int nCards=6;
-    float totalH=titleTotal+chipH+24.0f+nCards*(cardH+cardGap)+30.0f;
-    float y=(G.h-totalH)*0.18f;
+    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f,cardGap=8.0f;
+    float chipH=36.0f;
+    float totalH=70.0f+34.0f+28.0f+28.0f+chipH+28.0f+6*(cardH+cardGap)+40.0f;
+    float y=G.h*0.04f;
     if(y<G.h*0.02f)y=G.h*0.02f;
 
-    /* Logo area */
-    /* Simple text logo since we can't draw images */
-    rrct((G.w-60.0f)*0.5f,y,60.0f,60.0f,14.0f,Vec4{C_CYAN});
-    txt((G.w-msr("PC",20.0f))*0.5f,y+36.0f,"PC",20.0f,Vec4{C_WHITE});
-    y+=68.0f;
+    /* Logo - green rounded square matching element_logo_green */
+    rrct((G.w-52.0f)*0.5f,y+4.0f,52.0f,52.0f,16.0f,Vec4{0.15f,0.75f,0.45f,1.0f});
+    /* Inner detail for logo */
+    rrct((G.w-28.0f)*0.5f,y+16.0f,28.0f,28.0f,8.0f,Vec4{0.10f,0.60f,0.35f,1.0f});
+    y+=60.0f;
 
-    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{C_WHITE});
-    y+=32.0f;
+    /* App name */
+    txt((G.w-msr("Progressive Chat",24.0f))*0.5f,y,"Progressive Chat",24.0f,Vec4{C_CYAN});
+    y+=36.0f;
 
-    txt((G.w-msr("Choose your protocol",16.0f))*0.5f,y,"Choose your protocol",16.0f,Vec4{C_LABEL});
-    y+=26.0f;
+    txt((G.w-msr("Choose your protocol",17.0f))*0.5f,y,"Choose your protocol",17.0f,Vec4{C_LABEL});
+    y+=30.0f;
 
     /* Category chips */
-    float chipW=fw*0.5f-4.0f;
-    rrct(pad,y,chipW,chipH,chipH/2,G.btns[0].pressed?Vec4{C_CYAN}:Vec4{0.18f,0.18f,0.25f,1.0f});
-    txt(pad+chipW*0.15f,y+chipH*0.35f+4.0f,"Open source",13.0f,Vec4{C_WHITE});
+    float chipW=fw*0.5f-5.0f;
+    rrct(pad,y,chipW,chipH,chipH/2,Vec4{0.20f,0.20f,0.28f,1.0f});
+    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",14.0f,Vec4{C_WHITE});
     G.btns[0].rect={pad,y,chipW,chipH};
 
-    rrct(pad+chipW+8.0f,y,chipW,chipH,chipH/2,Vec4{0.10f,0.10f,0.14f,1.0f});
-    txt(pad+chipW+8.0f+chipW*0.25f,y+chipH*0.35f+4.0f,"Proprietary",13.0f,Vec4{C_LABEL});
-    G.btns[1].rect={pad+chipW+8.0f,y,chipW,chipH};
-    y+=chipH+10.0f;
+    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,Vec4{0.10f,0.10f,0.15f,1.0f});
+    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",14.0f,Vec4{C_LABEL});
+    G.btns[1].rect={pad+chipW+10.0f,y,chipW,chipH};
+    y+=chipH+12.0f;
 
-    txt(pad+4.0f,y,"Decentralized, fully open and free.",12.0f,Vec4{C_HINT});
-    y+=24.0f;
+    txt(pad+4.0f,y,"Decentralized, fully open and free.",13.0f,Vec4{C_HINT});
+    y+=28.0f;
 
     /* Protocol cards */
     struct{const char*title,*desc;Vec4 accent;bool dim;}cards[]={
         {"Matrix","Modern messenger with E2E encryption",Vec4{C_CYAN},false},
         {"IRC","Lightweight classic for old-school hackers",Vec4{C_GREEN},false},
         {"XMPP","Federated instant messaging since 1999",Vec4{C_PURPLE},true},
-        {"Delta Chat","Chat over email - no new account needed",Vec4{0.40f,0.55f,0.75f,1.0f},true},
-        {"Lemmy","Decentralized link aggregator",Vec4{0.75f,0.65f,0.30f,1.0f},true},
-        {"Reddit","The front page of the internet",Vec4{0.85f,0.45f,0.30f,1.0f},true},
+        {"Delta Chat","Chat over email - no new account needed",Vec4{0.40f,0.55f,0.80f,1.0f},true},
+        {"Lemmy","Decentralized link aggregator",Vec4{0.80f,0.65f,0.30f,1.0f},true},
+        {"Reddit","The front page of the internet",Vec4{0.88f,0.45f,0.30f,1.0f},true},
     };
-    for(int i=0;i<nCards;i++){
-        float alpha=cards[i].dim?0.45f:1.0f;
-        rrct(pad,y,fw,cardH,10.0f,Vec4{0.12f*alpha,0.12f*alpha,0.17f*alpha,1.0f});
-        /* Accent stripe */
-        rct(pad,y,3.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        /* Icon placeholder */
-        rrct(pad+10.0f,y+12.0f,38.0f,38.0f,8.0f,Vec4{cards[i].accent.r*0.3f*alpha,cards[i].accent.g*0.3f*alpha,cards[i].accent.b*0.3f*alpha,1.0f});
-        txt(pad+58.0f,y+16.0f,cards[i].title,15.0f,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+58.0f,y+38.0f,cards[i].desc,11.0f,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-70.0f,y+16.0f,"Soon",13.0f,Vec4{C_HINT});
+    for(int i=0;i<6;i++){
+        float alpha=cards[i].dim?0.40f:1.0f;
+        rrct(pad,y,fw,cardH,14.0f,Vec4{0.12f*alpha,0.12f*alpha,0.18f*alpha,1.0f});
+        rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
+        rrct(pad+12.0f,y+10.0f,44.0f,44.0f,14.0f,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
+        txt(pad+64.0f,y+18.0f,cards[i].title,16.0f,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+64.0f,y+40.0f,cards[i].desc,12.0f,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",14.0f,Vec4{C_HINT});
         G.btns[2+i].rect={pad,y,fw,cardH};
         G.btns[2+i].color=cards[i].accent;
         y+=cardH+cardGap;
     }
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",11.0f))*0.5f,G.h-24.0f,
-        "Progressive IRC  v0.5.5-pre",11.0f,Vec4{C_HINT});
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-26.0f,
+        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
 static void renderIrcAuth(){
+    /* Back button */
+    G.btns[0].rect={8.0f,8.0f,50.0f,40.0f};
+    G.btns[0].text="<";
+    G.btns[0].color=Vec4{C_DARK};
+    btn(G.btns[0],22.0f);
+
     float pad=G.w*0.08f,fw=G.w*0.84f;
     float fieldH=48.0f,fieldGap=24.0f;
     int nFields=4;
@@ -361,8 +366,8 @@ static void renderIrcAuth(){
     /* Background highlight for TLS row */
     rrct(pad,cy-2.0f,fw,tlsH+4.0f,8.0f,Vec4{0.11f,0.11f,0.16f,1.0f});
     txt(pad+8.0f,cy+8.0f,"Use TLS/SSL",17.0f,Vec4{C_WHITE});
-    G.btns[0].rect={pad+fw-70.0f,cy,70.0f,34.0f};
-    G.btns[0].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
+    G.btns[1].rect={pad+fw-70.0f,cy,70.0f,34.0f};
+    G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
     toggleSwitch(pad+fw-62.0f,cy+2.0f,G.login.tls);
     cy+=tlsH+12.0f;
 
@@ -371,10 +376,10 @@ static void renderIrcAuth(){
     cy+=14.0f;
 
     /* Connect button inside card */
-    G.btns[1].rect={pad,cy,fw,btnH};
-    G.btns[1].text="Connect";
-    G.btns[1].color=Vec4{C_CYAN};
-    btn(G.btns[1],20.0f);
+    G.btns[2].rect={pad,cy,fw,btnH};
+    G.btns[2].text="Connect";
+    G.btns[2].color=Vec4{C_CYAN};
+    btn(G.btns[2],20.0f);
 
     /* Footer */
     txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
@@ -383,6 +388,12 @@ static void renderIrcAuth(){
 
 /* ====== MATRIX LOGIN SCREEN ====== */
 static void renderMatrixLogin(){
+    /* Back button */
+    G.btns[0].rect={8.0f,8.0f,50.0f,40.0f};
+    G.btns[0].text="<";
+    G.btns[0].color=Vec4{C_DARK};
+    btn(G.btns[0],22.0f);
+
     float pad=G.w*0.08f,fw=G.w*0.84f;
     float fieldH=48.0f,fieldGap=20.0f,btnH=46.0f;
     float cardPad=20.0f,titleH=36.0f;
@@ -411,16 +422,16 @@ static void renderMatrixLogin(){
     field("Password","");
 
     cy+=8.0f;
-    G.btns[0].rect={pad,cy,fw,btnH};
-    G.btns[0].text="Sign in";
-    G.btns[0].color=Vec4{C_CYAN};
-    btn(G.btns[0],20.0f);
+    G.btns[1].rect={pad,cy,fw,btnH};
+    G.btns[1].text="Sign in";
+    G.btns[1].color=Vec4{C_CYAN};
+    btn(G.btns[1],20.0f);
     cy+=btnH+12.0f;
 
     txt((G.w-msr("Create account",16.0f))*0.5f,cy+6.0f,"Create account",16.0f,Vec4{C_CYAN});
-    G.btns[1].rect={(G.w-msr("Create account",16.0f))*0.5f-8.0f,cy,msr("Create account",16.0f)+16.0f,28.0f};
-    G.btns[1].text=nullptr;
-    G.btns[1].color=Vec4{0,0,0,0};
+    G.btns[2].rect={(G.w-msr("Create account",16.0f))*0.5f-8.0f,cy,msr("Create account",16.0f)+16.0f,28.0f};
+    G.btns[2].text=nullptr;
+    G.btns[2].color=Vec4{0,0,0,0};
 
     txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
         "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
@@ -507,8 +518,8 @@ static void td(float x,float y){
     G.tx=x;G.ty=y;G.touching=true;
     if(G.screen==SCR_CHAT&&G.ds==DS_OPEN&&x<G.dw){
         int h=hitB(x,y);
-        if(h==0){G.ds=DS_CLOSED;G.dx=0;}
-        else if(h>0&&h<=(int)G.rooms.size()){G.activeRoom=h-1;G.sy=0;G.ds=DS_CLOSED;G.dx=0;layoutUI();}
+        if(h==1){G.ds=DS_CLOSED;G.dx=0;} /* drawer toggle closes */
+        else if(h>=2&&h<=1+(int)G.rooms.size()){G.activeRoom=h-2;G.sy=0;G.ds=DS_CLOSED;G.dx=0;layoutUI();}
         return;
     }
     int h=hitB(x,y);
@@ -527,14 +538,17 @@ static void tu(float x,float y){
                 /* 4-7 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
-                if(i==0){LOGI("Sign in");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
-                else if(i==1){LOGI("Create account");}
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                else if(i==1){LOGI("Sign in");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==2){LOGI("Create account");}
             }
             else if(G.screen==SCR_IRC){
-                if(i==0){G.login.tls=!G.login.tls;G.btns[0].color=G.login.tls?Vec4{C_TOGGLE_TRACK_ON}:Vec4{C_TOGGLE_TRACK_OFF};}
-                else if(i==1){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                else if(i==1){G.login.tls=!G.login.tls;G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};}
+                else if(i==2){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
             }else if(G.screen==SCR_CHAT){
-                if(i==0){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
             }
         }
     }G.ab=-1;
