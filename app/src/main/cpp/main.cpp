@@ -1219,18 +1219,18 @@ static void renderChat(){
     if(G.ctxMenu){
         float cx=G.ctxMX,cy=G.ctxMY;
         rct(0,0,(float)G.w,(float)G.h,Vec4{0,0,0,0.4f});
-        const char*citems[]={"Reply","Copy","Pin","Delete"};
-        Vec4 ccols[]={Vec4{C_CYAN},Vec4{C_WHITE},Vec4{C_GREEN},Vec4{0.95f,0.35f,0.35f,1.0f}};
-        float cmw=160.0f,cmh=36.0f*G.dp;
-        float cmx=cx-cmw*0.5f,cmy=cy-cmh*2.0f;
+        const char*citems[]={"Reply","Copy","Pin","Forward","Delete"};
+        Vec4 ccols[]={Vec4{C_CYAN},Vec4{C_WHITE},Vec4{C_GREEN},Vec4{0.55f,0.50f,0.80f,1.0f},Vec4{0.95f,0.35f,0.35f,1.0f}};
+        float cmw=170.0f,cmh=36.0f*G.dp;
+        float cmx=cx-cmw*0.5f,cmy=cy-cmh*2.5f;
         if(cmx<8.0f)cmx=8.0f;if(cmx+cmw>G.w-8.0f)cmx=G.w-cmw-8.0f;
         if(cmy<60.0f)cmy=cy+20.0f;
-        rrct(cmx-4.0f,cmy-4.0f,cmw+8.0f,cmh*4+8.0f,12.0f,Vec4{0.15f,0.15f,0.25f,0.95f});
-        for(int ci=0;ci<4;ci++){
+        rrct(cmx-4.0f,cmy-4.0f,cmw+8.0f,cmh*5+8.0f,12.0f,Vec4{0.15f,0.15f,0.25f,0.95f});
+        for(int ci=0;ci<5;ci++){
             rct(cmx,cmy+ci*cmh,cmw,cmh,ci==G.longPressIdx?Vec4{C_SEL}:Vec4{0,0,0,0});
             txt(cmx+12.0f,cmy+ci*cmh+cmh*0.65f,citems[ci],13.0f*G.dp,ccols[ci]);
-            G.btns[11+ci].rect={cmx,cmy+ci*cmh,cmw,cmh};
-            G.btns[11+ci].color=Vec4{0,0,0,0};G.btns[11+ci].text=nullptr;
+            G.btns[10+ci].rect={cmx,cmy+ci*cmh,cmw,cmh};
+            G.btns[10+ci].color=Vec4{0,0,0,0};G.btns[10+ci].text=nullptr;
         }
     }
 
@@ -1259,13 +1259,13 @@ static void td(float x,float y){
     G.tx=x;G.ty=y;G.touching=true;G.tdTime=(float)clock()/(float)CLOCKS_PER_SEC;
     /* Context menu: execute action directly on tap */
     if(G.ctxMenu){
-        /* Direct hit test on context menu button rects (indices 11-14) */
-        for(int ci=0;ci<4;ci++){
-            if(hit(x,y,G.btns[11+ci].rect)){
+        /* Direct hit test on context menu button rects (indices 10-14) */
+        for(int ci=0;ci<5;ci++){
+            if(hit(x,y,G.btns[10+ci].rect)){
                 Room&r=G.rooms[G.activeRoom];
                 if(G.longPressIdx>=0&&G.longPressIdx<(int)r.msgs.size()){
                     if(ci==0){G.login.replyTo=G.longPressIdx;} /* Reply */
-                    else if(ci==3){r.msgs.erase(r.msgs.begin()+G.longPressIdx);} /* Delete */
+                    else if(ci==4){r.msgs.erase(r.msgs.begin()+G.longPressIdx);} /* Delete */
                 }
                 G.ctxMenu=false;return;
             }
