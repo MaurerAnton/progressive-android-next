@@ -554,7 +554,7 @@ static void renderMatrixLogin(){
     rrct(pad,cy+18.0f,fw,fieldH,10.0f,ff==1?Vec4{0.18f,0.18f,0.26f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     rct(pad,cy+18.0f+fieldH-2.0f,fw,2.0f,ff==1?Vec4{C_CYAN}:Vec4{0.22f,0.25f,0.32f,1.0f});
     G.login.hsUrl[G.login.hsLen]=0;
-    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,G.login.hsUrl,16.0f*G.dp,Vec4{C_WHITE},1.03f);
+    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,G.login.hsUrl,16.0f*G.dp,ff==1?Vec4{0,0,0,0}:Vec4{C_WHITE},1.03f);
     /* Cursor blink for focused field */
     if(ff==1&&(G.login.frameCount/30)%2){
         float cx=pad+14.0f+msr(G.login.hsUrl,16.0f*G.dp);
@@ -571,7 +571,7 @@ static void renderMatrixLogin(){
     rrct(pad,cy+18.0f,fw,fieldH,10.0f,ff==2?Vec4{0.18f,0.18f,0.26f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     rct(pad,cy+18.0f+fieldH-2.0f,fw,2.0f,ff==2?Vec4{C_CYAN}:Vec4{0.22f,0.25f,0.32f,1.0f});
     G.login.user[G.login.userLen]=0;
-    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,G.login.user,16.0f*G.dp,Vec4{C_WHITE},1.03f);
+    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,G.login.user,16.0f*G.dp,ff==2?Vec4{0,0,0,0}:Vec4{C_WHITE},1.03f);
     if(ff==2&&(G.login.frameCount/30)%2){
         float cx=pad+14.0f+msr(G.login.user,16.0f*G.dp);
         rct(cx,cy+18.0f+6.0f,2.0f,fieldH-12.0f,Vec4{C_CYAN});
@@ -586,7 +586,7 @@ static void renderMatrixLogin(){
     rct(pad,cy+18.0f+fieldH-2.0f,fw,2.0f,ff==3?Vec4{C_CYAN}:Vec4{0.22f,0.25f,0.32f,1.0f});
     char masked[64];int ml=G.login.passLen;if(ml>60)ml=60;
     for(int i=0;i<ml;i++)masked[i]='*';masked[ml]=0;
-    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,ml>0?masked:"",16.0f*G.dp,Vec4{C_WHITE},1.03f);
+    txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,ml>0?masked:"",16.0f*G.dp,ff==3?Vec4{0,0,0,0}:Vec4{C_WHITE},1.03f);
     if(ff==3&&(G.login.frameCount/30)%2){
         float cx=pad+14.0f+(ml>0?msr(masked,16.0f*G.dp):0);
         rct(cx,cy+18.0f+6.0f,2.0f,fieldH-12.0f,Vec4{C_CYAN});
