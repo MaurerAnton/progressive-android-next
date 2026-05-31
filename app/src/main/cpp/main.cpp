@@ -869,11 +869,14 @@ static void renderChatList(){
         rct(pad-4.0f,y,fw+8.0f,rowH,Vec4{0.14f*alpha,0.14f*alpha,0.20f*alpha,1.0f});
         /* Avatar */
         float ar=rowH*0.55f;
-        rrct(pad+4.0f,y+(rowH-ar)*0.5f,ar,ar,ar*0.5f,Vec4{kNicks[i%16][0],kNicks[i%16][1],kNicks[i%16][2],alpha});
+        bool isDM=(r.name[0]=='@');
+        Vec4 avCol=isDM?Vec4{0.55f,0.40f,0.75f,1.0f}:Vec4{kNicks[i%16][0],kNicks[i%16][1],kNicks[i%16][2],alpha};
+        rrct(pad+4.0f,y+(rowH-ar)*0.5f,ar,ar,ar*0.5f,avCol);
         char init[2]={r.name[0],0};
         txt(pad+4.0f+ar*0.25f,y+rowH*0.62f,init,ar*0.45f,Vec4{C_WHITE},1.0f);
-        /* Name + preview */
+        /* Name + preview + DM indicator */
         txt(pad+ar+16.0f,y+rowH*0.30f,r.name,14.0f*G.dp,Vec4{C_WHITE});
+        if(isDM)txt(pad+ar+16.0f+msr(r.name,14.0f*G.dp)+4.0f,y+rowH*0.30f,"DM",9.0f*G.dp,Vec4{C_PURPLE});
         char prev[128];
         const char*lastMsg=r.msgs.empty()?"":r.msgs.back().text;
         snprintf(prev,128,"%.45s",lastMsg);
