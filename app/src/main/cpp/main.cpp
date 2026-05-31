@@ -86,7 +86,7 @@ enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
-    bool init;int w,h;
+    bool init;int w,h;float dp; /* density scale: 1sp = dp px */
     int logoW=0,logoH=0;
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo;
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
@@ -288,26 +288,26 @@ static void renderServerSelect(){
         y+=is+8.0f;
     }
     /* Logotype as text */
-    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{C_TITLE});
-    y+=34.0f;
+    txt((G.w-msr("Progressive Chat",20.0f*G.dp))*0.5f,y,"Progressive Chat",20.0f*G.dp,Vec4{C_TITLE});
+    y+=28.0f*G.dp;
 
-    txt((G.w-msr("Choose your protocol",17.0f))*0.5f,y,"Choose your protocol",17.0f,Vec4{C_LABEL});
-    y+=30.0f;
+    txt((G.w-msr("Choose your protocol",14.0f*G.dp))*0.5f,y,"Choose your protocol",14.0f*G.dp,Vec4{C_LABEL});
+    y+=28.0f*G.dp;
 
     /* Category chips */
     float chipW=fw*0.5f-5.0f;
     bool openSrc=(G.login.cat==0);
     rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
-    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",14.0f,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[0].rect={pad,y,chipW,chipH};
 
     rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
-    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",14.0f,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[1].rect={pad+chipW+10.0f,y,chipW,chipH};
-    y+=chipH+12.0f;
+    y+=chipH+16.0f*G.dp;
 
-    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",13.0f,Vec4{C_HINT});
-    y+=28.0f;
+    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
+    y+=24.0f*G.dp;
 
     /* Protocol cards */
     struct Card{const char*title,*desc;Vec4 accent;bool dim;};
@@ -334,9 +334,9 @@ static void renderServerSelect(){
         rrct(pad,y,fw,cardH,14.0f,Vec4{0.12f*alpha,0.12f*alpha,0.18f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
         rrct(pad+12.0f,y+10.0f,44.0f,44.0f,14.0f,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
-        txt(pad+64.0f,y+18.0f,cards[i].title,16.0f,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+64.0f,y+40.0f,cards[i].desc,12.0f,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",14.0f,Vec4{C_HINT});
+        txt(pad+64.0f,y+18.0f,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+64.0f,y+40.0f,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_HINT});
         G.btns[2+i].rect={pad,y,fw,cardH};
         G.btns[2+i].color=cards[i].accent;
         y+=cardH+cardGap;
@@ -386,7 +386,7 @@ static void renderIrcAuth(){
         txt(pad+4.0f,cy,label,13.0f,Vec4{C_TITLE},1.05f);
         rrct(pad,cy+16.0f,fw,fieldH,10.0f,Vec4{0.15f,0.15f,0.20f,1.0f});
         if(val&&*val)txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,val,16.0f,Vec4{C_WHITE},1.03f);
-        else txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,hint,16.0f,Vec4{C_HINT},1.03f);
+        else txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,hint,16.0f*G.dp,Vec4{C_HINT},1.03f);
         cy+=fieldH+fieldGap;
     };
 
@@ -399,7 +399,7 @@ static void renderIrcAuth(){
     cy+=4.0f;
     /* Background highlight for TLS row */
     rrct(pad,cy-2.0f,fw,tlsH+4.0f,8.0f,Vec4{0.11f,0.11f,0.16f,1.0f});
-    txt(pad+8.0f,cy+8.0f,"Use TLS/SSL",17.0f,Vec4{C_WHITE});
+    txt(pad+8.0f,cy+8.0f,"Use TLS/SSL",14.0f*G.dp,Vec4{C_WHITE});
     G.btns[1].rect={pad+fw-70.0f,cy,70.0f,34.0f};
     G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
     toggleSwitch(pad+fw-62.0f,cy+2.0f,G.login.tls);
@@ -413,7 +413,7 @@ static void renderIrcAuth(){
     G.btns[2].rect={pad,cy,fw,btnH};
     G.btns[2].text="Connect";
     G.btns[2].color=Vec4{C_CYAN};
-    btn(G.btns[2],20.0f);
+    btn(G.btns[2],14.0f*G.dp);
 
     /* Footer */
     txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
@@ -439,7 +439,7 @@ static void renderMatrixLogin(){
     rrct(pad-7.0f,cardY+1.0f,fw+14.0f,cardH-2.0f,15.0f,Vec4{0.17f,0.17f,0.23f,1.0f});
 
     float cy=cardY+cardPad;
-    txt(pad+fw*0.04f,cy+10.0f,"Sign in",24.0f,Vec4{C_TITLE});
+    txt(pad+fw*0.04f,cy+10.0f,"Sign in",20.0f*G.dp,Vec4{C_TITLE});
     cy+=titleH+6.0f;
     rct(pad,cy,fw,1.0f,Vec4{C_DIVIDER});
     cy+=14.0f;
@@ -459,10 +459,10 @@ static void renderMatrixLogin(){
     G.btns[1].rect={pad,cy,fw,btnH};
     G.btns[1].text="Sign in";
     G.btns[1].color=Vec4{C_CYAN};
-    btn(G.btns[1],20.0f);
+    btn(G.btns[1],14.0f*G.dp);
     cy+=btnH+12.0f;
 
-    txt((G.w-msr("Create account",16.0f))*0.5f,cy+6.0f,"Create account",16.0f,Vec4{C_CYAN});
+    txt((G.w-msr("Create account",16.0f))*0.5f,cy+6.0f,"Create account",14.0f*G.dp,Vec4{C_CYAN});
     G.btns[2].rect={(G.w-msr("Create account",16.0f))*0.5f-8.0f,cy,msr("Create account",16.0f)+16.0f,28.0f};
     G.btns[2].text=nullptr;
     G.btns[2].color=Vec4{0,0,0,0};
@@ -476,18 +476,18 @@ static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
     float dx=-G.dw+G.dx;
     rct(dx,0,G.dw,(float)G.h,Vec4{C_DRAWER});
-    txt(dx+12,40,"Rooms",20.0f,Vec4{C_TITLE});
+    txt(dx+12,40,"Rooms",14.0f*G.dp,Vec4{C_TITLE});
     rct(dx,54,G.dw,1.0f,Vec4{C_DIVIDER});
     float y=64.0f;
     for(size_t i=0;i<G.rooms.size();i++){
         bool sel=(int)i==G.activeRoom;
         if(sel)rct(dx+4.0f,y+2.0f,G.dw-8.0f,40.0f,Vec4{C_SEL});
-        txt(dx+12,y+28,G.rooms[i].name,18.0f,sel?Vec4{C_WHITE}:Vec4{C_LABEL});
+        txt(dx+12,y+28,G.rooms[i].name,14.0f*G.dp,sel?Vec4{C_WHITE}:Vec4{C_LABEL});
         if(G.rooms[i].unread>0){
             char ub[8];snprintf(ub,8,"%d",G.rooms[i].unread);
             float uw=msr(ub,13.0f);
             rrct(dx+G.dw-uw-20.0f,y+15.0f,uw+12.0f,18.0f,9.0f,Vec4{C_CYAN});
-            txt(dx+G.dw-uw-14.0f,y+28,ub,13.0f,Vec4{C_WHITE});
+            txt(dx+G.dw-uw-14.0f,y+28,ub,11.0f*G.dp,Vec4{C_WHITE});
         }y+=48.0f;
     }
 }
@@ -498,8 +498,8 @@ static void renderChat(){
     float hdrH=52.0f;
 
     rct(0,0,(float)G.w,hdrH,Vec4{C_DARK});
-    txt(50,34,r.name,22.0f,Vec4{C_WHITE});
-    if(r.topic)txt(50,48,r.topic,13.0f,Vec4{C_LABEL});
+    txt(50,34,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    if(r.topic)txt(50,48,r.topic,11.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
     float msgTop=hdrH+4.0f,msgBot=G.h-50.0f,area=msgBot-msgTop;
@@ -514,14 +514,14 @@ static void renderChat(){
     float my=msgTop+8.0f-G.sy;
     for(auto&m:r.msgs){
         char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
-        txt(6,my+15,ts,13.0f,Vec4{C_TS},1.0f);
+        txt(6,my+15,ts,13.0f*G.dp,Vec4{C_TS},1.0f);
         float tx=6+msr(ts,13.0f)+5.0f;
-        if(!m.nick)txt(tx,my+15,m.text,13.0f,Vec4{C_SYSMSG},1.0f);
+        if(!m.nick)txt(tx,my+15,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         else{
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
-            txt(tx,my+15,m.nick,14.0f,nc,1.05f);
+            txt(tx,my+15,m.nick,14.0f*G.dp,nc,1.05f);
             tx+=msr(m.nick,14.0f)+5.0f;
-            txt(tx,my+15,m.text,14.0f,Vec4{C_WHITE},1.05f);
+            txt(tx,my+15,m.text,14.0f*G.dp,Vec4{C_WHITE},1.05f);
         }my+=lh;
     }
     glDisable(GL_SCISSOR_TEST);
@@ -532,8 +532,8 @@ static void renderChat(){
     rrct(6,msgBot+7,G.w-74.0f,36.0f,6.0f,Vec4{C_DARK});
     char hintBuf[128];
     snprintf(hintBuf,128,"Message #%s",r.name);
-    txt(14,msgBot+29,hintBuf,15.0f,Vec4{C_HINT});
-    if(G.nb>0)btn(G.btns[G.nb-1],19.0f);
+    txt(14,msgBot+29,hintBuf,14.0f*G.dp,Vec4{C_HINT});
+    if(G.nb>0)btn(G.btns[G.nb-1],14.0f*G.dp);
 
     /* Drawer overlay */
     if(G.ds!=DS_CLOSED){
@@ -652,6 +652,7 @@ static bool initGL(JNIEnv*env,jobject am){
     glBindVertexArray(0);
     glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0,0,G.w,G.h);
+    G.dp=(float)G.w/411.0f; /* density scale: 1080px/411dp = 2.63 */
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
     genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
