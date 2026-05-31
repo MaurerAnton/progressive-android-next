@@ -89,6 +89,12 @@ public class MainActivity extends Activity {
             float y = glView.getHeight() - ibH;
             return new float[]{6, y + 6, glView.getWidth() - 74, ibH - 12};
         }
+        if (ff == 5) {
+            /* Search field - below header */
+            float hdrH = 84 * dp;
+            float y = hdrH + 4;
+            return new float[]{36, y + 4, glView.getWidth() - 80, 30 * dp};
+        }
         float cardH = 40*dp + 3*(52*dp + 24*dp) + 2*24*dp + 48*dp + 20*dp;
         float cardY = (glView.getHeight() - cardH) * 0.20f;
         if (cardY < glView.getHeight() * 0.02f) cardY = glView.getHeight() * 0.02f;

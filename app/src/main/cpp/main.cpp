@@ -324,6 +324,7 @@ static void layoutUI(){
                 G.btns[G.nb++]=mkB(0,dy,G.dw,44,G.rooms[i].name,
                     i==(size_t)G.activeRoom?Vec4{C_SEL}:Vec4{0,0,0,0});dy+=48.0f;}
             G.btns[G.nb++]=mkB(G.w-60.0f,G.h-48.0f,52,40,"Send",Vec4{C_CYAN});
+            G.btns[G.nb++]=mkB(G.w-120.0f,G.h-48.0f,52,40,"+10",Vec4{C_GREEN}); /* Load more */
             break;}
     }
 }
@@ -1268,7 +1269,7 @@ static void tu(float x,float y){
             }else if(G.screen==SCR_CHAT){
                 if(i==0){LOGI("Back");G.login.searchMode=false;G.ctxMenu=false;G.login.replyTo=-1;G.screen=SCR_CHATLIST;layoutUI();}
                 else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
-                else if(i==2){G.login.searchMode=!G.login.searchMode;G.login.searchQLen=0;}
+                else if(i==2){G.login.searchMode=!G.login.searchMode;if(G.login.searchMode){G.login.searchQLen=0;G.login.focusField=5;}}
                 else if(i==G.nb-1){ /* Send button */
                     if(G.login.chatInputLen>0){
                         Room&r=G.rooms[G.activeRoom];
@@ -1277,6 +1278,15 @@ static void tu(float x,float y){
                         G.login.chatInputLen=0;G.login.replyTo=-1;
                         G.sy=0;layoutUI();
                     }
+                }
+                else if(i==G.nb-2){ /* Load more: +10 messages */
+                    Room&r=G.rooms[G.activeRoom];
+                    const char*samples[]={"new message","testing","looks good","nice work","+1","let's ship it","almost done","check this","awesome","thanks"};
+                    for(int j=0;j<10;j++){
+                        int h=12+(r.msgs.size()/10);int m=(r.msgs.size()*7)%60;
+                        r.msgs.push_back({strdup("alice"),strdup(samples[j]),h,m,0,0});
+                    }
+                    layoutUI();
                 }
             }else if(G.screen==SCR_CHATLIST){
                 if(i==7){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
@@ -1432,6 +1442,7 @@ Java_chat_progressive_app_next_MainActivity_nativeGetFieldText(JNIEnv*env,jclass
     else if(field==2){G.login.user[G.login.userLen]=0;t=G.login.user;}
     else if(field==3){G.login.pass[G.login.passLen]=0;t=G.login.pass;}
     else if(field==4){G.login.chatInput[G.login.chatInputLen]=0;t=G.login.chatInput;}
+    else if(field==5){G.login.searchQ[G.login.searchQLen]=0;t=G.login.searchQ;}
     return env->NewStringUTF(t);
 }
 
@@ -1443,6 +1454,7 @@ Java_chat_progressive_app_next_MainActivity_nativeSetFieldText(JNIEnv*env,jclass
     else if(field==2){memcpy(G.login.user,s,len);G.login.userLen=len;}
     else if(field==3){memcpy(G.login.pass,s,len);G.login.passLen=len;}
     else if(field==4){if(len>250)len=250;memcpy(G.login.chatInput,s,len);G.login.chatInputLen=len;}
+    else if(field==5){if(len>30)len=30;memcpy(G.login.searchQ,s,len);G.login.searchQLen=len;}
     env->ReleaseStringUTFChars(jtext,s);
 }
 }
