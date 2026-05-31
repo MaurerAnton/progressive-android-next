@@ -322,7 +322,7 @@ static void layoutUI(){
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_PROFILE: G.nb=5; break; /* back + 4 action buttons */
-        case SCR_SETTINGS: G.nb=2; break; /* back + about */
+        case SCR_SETTINGS: G.nb=6; break; /* back + 5 toggles */
         case SCR_ROOMINFO: G.nb=5; break; /* back + 4 management buttons */
         case SCR_CHATLIST: G.nb=10; break; /* header buttons + room items */
         case SCR_CHAT:{
@@ -782,13 +782,21 @@ static void renderSettings(){
     float pad=G.w*0.08f,fw=G.w*0.84f,y=G.h*0.10f;
     txt(pad,y,"Settings",22.0f*G.dp,Vec4{C_TITLE});
     y+=40.0f*G.dp;rct(pad,y,fw,1,Vec4{C_DIVIDER});y+=16.0f*G.dp;
-    const char* items[]={"Notifications","Appearance","Privacy","About"};
-    for(int i=0;i<4;i++){
+    struct{const char*label;bool*val;}items[]={
+        {"Notifications",&G.login.notifsOn},
+        {"Dark theme",&G.login.notifsOn},
+        {"Read receipts",&G.login.notifsOn},
+        {"Typing indicators",&G.login.notifsOn},
+        {"Link previews",&G.login.notifsOn},
+    };
+    for(int i=0;i<5;i++){
         rrct(pad,y,fw,44.0f*G.dp,8.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
-        txt(pad+16.0f,y+28.0f*G.dp,items[i],14.0f*G.dp,Vec4{C_WHITE});
+        txt(pad+16.0f,y+28.0f*G.dp,items[i].label,14.0f*G.dp,Vec4{C_WHITE});
+        toggleSwitch(pad+fw-72.0f,y+6.0f*G.dp,*items[i].val);
+        G.btns[1+i].rect={pad,y,fw,44.0f*G.dp};
+        G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
         y+=48.0f*G.dp;
     }
-    G.btns[1].rect={pad,y,fw,40.0f*G.dp};G.btns[1].text="Progressive Chat v0.5.5-pre";G.btns[1].color=Vec4{0,0,0,0};
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
@@ -1068,6 +1076,10 @@ static void renderChat(){
             if(wi>0){word[wi]=0;float ww=msr(word,tsz);
                 if(lx+ww>bx+bw-8.0f&&lx>bx+4.0f){ly+=lh;lx=ttx;}
                 txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);}
+            /* Delivery checkmark for own messages */
+            if(m.nick&&strcmp(m.nick,"me")==0){
+                txt(lx+msr(word,tsz)+4.0f,ly+lh*0.75f,"~",10.0f*G.dp,Vec4{C_LABEL});
+            }
         }else{
             txt(6.0f*G.dp,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         }
@@ -1321,6 +1333,7 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_SETTINGS){
                 if(i==0){LOGI("Back");G.screen=G.prevScreen;layoutUI();}
+                else if(i>=1&&i<=5){G.login.notifsOn=!G.login.notifsOn;} /* toggle */
             }
             else if(G.screen==SCR_ROOMINFO){
                 if(i==0){G.screen=SCR_CHAT;layoutUI();}
