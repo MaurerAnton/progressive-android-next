@@ -91,11 +91,11 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;char mention[64];int mentionLen;int filterUser;}login;
+    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;char mention[64];int mentionLen;int filterUser;bool searchMode;char searchQ[32];int searchQLen;bool notifsOn;}login;
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
-    Button btns[12];int nb,ab;
+    Button btns[20];int nb,ab;
     float tx,ty;bool touching;
     std::vector<Room> rooms;
     AAssetManager* amgr;
@@ -224,56 +224,78 @@ static void genData(){
         "Random off-topic chat | Keep it civil",
         "Development | C++ / OpenGL / Matrix bridge",
         "Matrix protocol discussion and testing"};
-    struct{const char*n,*t;int h,m;char tp;}ms[][20]={
-        {{nullptr,"--> alice joined #welcome",9,5},
-         {"alice","hello everyone!",9,6,0},
-         {nullptr,"--> bob joined #welcome",9,7},
-         {"bob","hey alice, how's it going?",9,7,0},
-         {"alice","pretty good! working on the renderer",9,8,0},
-         {nullptr,"--> charlie joined #welcome",9,9},
-         {"charlie","what renderer are you using?",9,10,0},
-         {"alice","pure OpenGL ES with SDF fonts. no JVM UI!",9,12,0},
-         {"bob","check out this screenshot:",9,15,0},
-         {"bob","[IMAGE: screenshot_2024.png (1920x1080, 245KB)]",9,15,1},
-         {"charlie","nice! here's the build log:",9,18,0},
-         {"charlie","[FILE: build_output.log (12.4KB)]",9,18,2},
-         {"alice","and a voice memo about the architecture:",9,22,0},
-         {"alice","[AUDIO: architecture_notes.ogg (0:42)]",9,22,3},
-         {"bob","let's vote on the next feature:",9,25,0},
-         {"bob","[POLL: Which feature first? 1)Avatars 2)Encryption 3)Search]",9,25,4},
-         {"charlie","I vote for avatars",9,26,6},
-         {"alice","encryption is more important",9,27,6},
-         {"bob","here's where we're hosting:",9,30,0},
-         {"bob","[MAP: Server location - Frankfurt, DE]",9,30,5}},
-        {{nullptr,"--> dave joined #general",10,14},
-         {"dave","anyone here?",10,15,0},
-         {"eve","yep, just lurking",10,16,0},
-         {nullptr,"<-- frank left #general",10,18}},
-        {{"frank","lol check this out https://example.com",11,20,0},
-         {"grace","haha that's amazing",11,21,0},
-         {"heidi","i don't get it",11,22,0},
-         {"frank","you had to be there",11,23,0}},
-        {{"ivan","pushed a new commit to the renderer",14,0,0},
-         {nullptr,"--> judy joined #dev",14,1},
-         {"judy","nice! SDF fonts looking crisp?",14,2,0},
-         {"ivan","yeah, smoothstep AA is working great",14,3,0},
-         {"karen","can we use this for the main app?",14,5,0},
-         {"ivan","that's the plan! merging into 0.5.5+",14,6,0}},
-        {{"larry","testing the matrix bridge",15,30,0},
-         {"mike","seems to be working",15,31,0},
-         {"nancy","which homeserver are you on?",15,32,0},
-         {"larry","matrix.org for now",15,33,0}}};
-    int mc[]={20,4,4,6,4};
-    for(int ri=0;ri<5;ri++){
-        Room r;r.name=rn[ri];r.topic=rt[ri];r.unread=ri<3?2:0;
-        for(int mi=0;mi<mc[ri];mi++){
-            Message m;m.nick=ms[ri][mi].n;m.text=ms[ri][mi].t;
-            m.h=ms[ri][mi].h;m.m=ms[ri][mi].m;
-            m.type=ms[ri][mi].tp;
-            if(m.nick){unsigned h=0;for(const char*p=m.nick;*p;p++)h=h*31+*p;m.ci=h%16;}else m.ci=0;
-            r.msgs.push_back(m);
-        }G.rooms.push_back(r);
+    const char*nicks[]={"alice","bob","charlie","dave","eve","frank","grace","heidi","ivan","judy"};
+    const char*texts[]={
+        "hello everyone!","hey there","good morning","how's it going?",
+        "pretty good! working on the renderer","nice! looking great",
+        "anyone seen the latest commit?","pushed a fix for the crash",
+        "what renderer are you using?","pure OpenGL ES with SDF fonts",
+        "check out this screenshot","can we use this for the main app?",
+        "that's the plan! merging into 0.5.5+","SDF fonts looking crisp?",
+        "yeah, smoothstep AA is working great","no JVM UI at all!",
+        "testing the matrix bridge","seems to be working",
+        "which homeserver are you on?","matrix.org for now",
+        "let's add more features","encryption next?",
+        "need to fix that scroll bug","on it right now",
+        "what about notifications?","will add soon",
+        "the drawer needs polish","agreed, it's a bit rough",
+        "fonts render beautifully","SDF was the right choice",
+        "how's performance?","60fps on Mali-G76",
+        "any memory leaks?","clean so far, no allocs per frame",
+        "great work everyone!","thanks!","awesome project",
+        "can't wait for 0.5.5","same here","let's ship it"};
+    const char*typemsgs[]={
+        "[IMAGE: screenshot_2024.png (1920x1080, 245KB)]",
+        "[FILE: build_output.log (12.4KB)]",
+        "[AUDIO: architecture_notes.ogg (0:42)]",
+        "[POLL: Which feature first? 1)Avatars 2)Encryption 3)Search 4)Notifications]",
+        "[MAP: Server location - Frankfurt, DE]",
+        "I vote for avatars","encryption is more important","search is crucial",
+        "notifications would be nice"};
+    /* #welcome: 160 messages */
+    Room rw;rw.name=strdup(rn[0]);rw.topic=rt[0];rw.unread=2;
+    rw.msgs.push_back({nullptr,strdup("--> alice joined #welcome"),9,5,0,0});
+    for(int i=0;i<159;i++){
+        int ni=i%10;int ti=i%(sizeof(texts)/sizeof(texts[0]));
+        char tp=0;const char*txt=texts[ti];
+        if(i%23==0){tp=1;txt=typemsgs[0];}
+        else if(i%31==0){tp=2;txt=typemsgs[1];}
+        else if(i%37==0){tp=3;txt=typemsgs[2];}
+        else if(i%41==0){tp=4;txt=typemsgs[3];}
+        else if(i%47==0){tp=5;txt=typemsgs[4];}
+        else if(i%53==0){tp=6;txt=typemsgs[5+i%4];}
+        int h=9+(i/15);int m=(i*3)%60;
+        unsigned ch=0;for(const char*p=nicks[ni];*p;p++)ch=ch*31+*p;
+        rw.msgs.push_back({strdup(nicks[ni]),strdup(txt),h,m,(int)(ch%16),tp});
     }
+    G.rooms.push_back(rw);
+    /* Other rooms: simple */
+    Room rg;rg.name=strdup(rn[1]);rg.topic=rt[1];rg.unread=0;
+    rg.msgs.push_back({nullptr,strdup("--> dave joined #general"),10,14,0,0});
+    rg.msgs.push_back({strdup("dave"),strdup("anyone here?"),10,15,3,0});
+    rg.msgs.push_back({strdup("eve"),strdup("yep, just lurking"),10,16,4,0});
+    rg.msgs.push_back({nullptr,strdup("<-- frank left #general"),10,18,0,0});
+    G.rooms.push_back(rg);
+    Room rr;rr.name=strdup(rn[2]);rr.topic=rt[2];rr.unread=2;
+    rr.msgs.push_back({strdup("frank"),strdup("lol check this out"),11,20,5,0});
+    rr.msgs.push_back({strdup("grace"),strdup("haha that's amazing"),11,21,6,0});
+    rr.msgs.push_back({strdup("heidi"),strdup("i don't get it"),11,22,7,0});
+    rr.msgs.push_back({strdup("frank"),strdup("you had to be there"),11,23,5,0});
+    G.rooms.push_back(rr);
+    Room rd;rd.name=strdup(rn[3]);rd.topic=rt[3];rd.unread=0;
+    rd.msgs.push_back({strdup("ivan"),strdup("pushed a new commit to the renderer"),14,0,8,0});
+    rd.msgs.push_back({nullptr,strdup("--> judy joined #dev"),14,1,0,0});
+    rd.msgs.push_back({strdup("judy"),strdup("nice! SDF fonts looking crisp?"),14,2,9,0});
+    rd.msgs.push_back({strdup("ivan"),strdup("yeah, smoothstep AA is working great"),14,3,8,0});
+    rd.msgs.push_back({strdup("karen"),strdup("can we use this for the main app?"),14,5,10,0});
+    rd.msgs.push_back({strdup("ivan"),strdup("that's the plan! merging into 0.5.5+"),14,6,8,0});
+    G.rooms.push_back(rd);
+    Room rm;rm.name=strdup(rn[4]);rm.topic=rt[4];rm.unread=0;
+    rm.msgs.push_back({strdup("larry"),strdup("testing the matrix bridge"),15,30,11,0});
+    rm.msgs.push_back({strdup("mike"),strdup("seems to be working"),15,31,12,0});
+    rm.msgs.push_back({strdup("nancy"),strdup("which homeserver are you on?"),15,32,13,0});
+    rm.msgs.push_back({strdup("larry"),strdup("matrix.org for now"),15,33,11,0});
+    G.rooms.push_back(rm);
 }
 
 static void layoutUI(){
@@ -287,8 +309,9 @@ static void layoutUI(){
         case SCR_SETTINGS: G.nb=2; break; /* back + about */
         case SCR_ROOMINFO: G.nb=5; break; /* back + 4 management buttons */
         case SCR_CHAT:{
-            G.btns[G.nb++]=mkB(6,6,42,42,"<",Vec4{C_DARK}); /* back */
-            G.btns[G.nb++]=mkB(52,6,42,42,"#",Vec4{C_DARK}); /* drawer toggle */
+            G.btns[G.nb++]=mkB(8,78,50,40,"<",Vec4{C_DARK}); /* back - below status bar */
+            G.btns[G.nb++]=mkB(62,78,50,40,"#",Vec4{C_DARK}); /* drawer toggle */
+            G.btns[G.nb++]=mkB(G.w-58,78,50,40,"Q",Vec4{C_DARK}); /* search */
             float dy=60.0f;
             for(size_t i=0;i<G.rooms.size();i++){
                 G.btns[G.nb++]=mkB(0,dy,G.dw,44,G.rooms[i].name,
@@ -710,10 +733,11 @@ static void renderRoomInfo(){
     snprintf(buf,64,"Messages: %d",(int)r.msgs.size());
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=36.0f*G.dp;
     /* Actions */
-    const char* acts[]={"Notifications: On","Pin room","Search messages","Leave room"};
+    char nb[48];snprintf(nb,48,"Notifications: %s",G.login.notifsOn?"ON":"OFF");
+    const char* acts[]={nb,"Pin room","Search messages","Leave room"};
     for(int i=0;i<4;i++){
         rrct(pad,y,fw,44.0f*G.dp,10.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
-        txt(pad+16.0f,y+28.0f*G.dp,acts[i],14.0f*G.dp,i==3?Vec4{0.95f,0.35f,0.35f,1.0f}:Vec4{C_WHITE});
+        txt(pad+16.0f,y+28.0f*G.dp,acts[i],14.0f*G.dp,i==3?Vec4{0.95f,0.35f,0.35f,1.0f}:i==2?Vec4{C_CYAN}:Vec4{C_WHITE});
         G.btns[1+i].rect={pad,y,fw,44.0f*G.dp};
         G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
         y+=48.0f*G.dp;
@@ -745,12 +769,32 @@ static void renderDrawer(){
 static void renderChat(){
     if(G.rooms.empty())return;
     Room&r=G.rooms[G.activeRoom];
-    float hdrH=40.0f*G.dp;
+    float hdrH=84.0f*G.dp;
 
     rct(0,0,(float)G.w,hdrH,Vec4{C_DARK});
-    txt(12.0f*G.dp,hdrH*0.65f,r.name,16.0f*G.dp,Vec4{C_WHITE});
-    if(r.topic)txt(12.0f*G.dp,hdrH-4.0f,r.topic,10.0f*G.dp,Vec4{C_LABEL});
+    /* Back and search buttons - rendered by btn() at their stored positions */
+    btn(G.btns[0],14.0f*G.dp); /* < back */
+    btn(G.btns[1],14.0f*G.dp); /* # drawer */
+    btn(G.btns[2],14.0f*G.dp); /* Q search */
+    txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
+
+    /* Search overlay */
+    if(G.login.searchMode){
+        float sy=hdrH+4.0f,sh=36.0f*G.dp;
+        rct(0,sy,(float)G.w,sh,Vec4{0.05f,0.05f,0.09f,1.0f});
+        rct(0,sy+sh,(float)G.w,1.0f,Vec4{C_CYAN});
+        txt(8.0f,sy+22.0f,"Q:",14.0f*G.dp,Vec4{C_CYAN});
+        char sq[64];
+        if(G.login.searchQLen>0)snprintf(sq,64,"%s|",G.login.searchQ);
+        else snprintf(sq,64,"type to search...");
+        txt(36.0f,sy+22.0f,sq,14.0f*G.dp,G.login.searchQLen>0?Vec4{C_WHITE}:Vec4{C_HINT});
+        /* Close button */
+        rct(G.w-40.0f,sy+4.0f,32.0f,sh-8.0f,Vec4{C_DARK});
+        txt(G.w-36.0f,sy+22.0f,"X",14.0f*G.dp,Vec4{0.9f,0.3f,0.3f,1.0f});
+        hdrH+=sh+4.0f;
+    }
 
     float msgTop=hdrH+4.0f,msgBot=G.h-44.0f*G.dp,area=msgBot-msgTop;
     float lh=18.0f*G.dp,total=r.msgs.size()*lh+8.0f;
@@ -765,6 +809,13 @@ static void renderChat(){
     for(auto&m:r.msgs){
         /* Filter: only show messages from profile user if filterUser set */
         if(G.login.filterUser>0&&(!m.nick||strcmp(m.nick,G.login.profileNick)!=0))continue;
+        /* Search filter: only show matching messages */
+        if(G.login.searchMode&&G.login.searchQLen>0){
+            bool match=false;
+            if(m.nick&&strstr(m.nick,G.login.searchQ))match=true;
+            if(m.text&&strstr(m.text,G.login.searchQ))match=true;
+            if(!match)continue;
+        }
         char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
         txt(6.0f*G.dp,my+lh*0.75f,ts,12.0f*G.dp,Vec4{C_TS},1.0f);
         float tx=6.0f*G.dp+msr(ts,12.0f*G.dp)+4.0f;
@@ -824,6 +875,12 @@ static void frame(){
 /* ====== TOUCH ====== */
 static void td(float x,float y){
     G.tx=x;G.ty=y;G.touching=true;
+    /* Search close button (X) in chat */
+    if(G.screen==SCR_CHAT&&G.login.searchMode){
+        float hdrH=84.0f*G.dp;
+        float sy=hdrH+4.0f,sh=36.0f*G.dp;
+        if(x>=G.w-40.0f&&x<=G.w-8.0f&&y>=sy+4.0f&&y<=sy+sh-4.0f){G.login.searchMode=false;return;}
+    }
     if(G.screen==SCR_CHAT&&G.ds==DS_OPEN&&x<G.dw){
         int h=hitB(x,y);
         if(h==1){G.ds=DS_CLOSED;G.dx=0;}
@@ -908,15 +965,18 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_ROOMINFO){
                 if(i==0){G.screen=SCR_CHAT;layoutUI();}
-                /* i=1..4 are room management actions */
+                else if(i==1){G.login.notifsOn=!G.login.notifsOn;} /* toggle notifications */
+                else if(i==2){G.screen=SCR_CHAT;G.login.searchMode=true;G.login.searchQLen=0;layoutUI();} /* search */
+                /* i=4: Leave room - todo */
             }
             else if(G.screen==SCR_IRC){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
                 else if(i==1){G.login.tls=!G.login.tls;G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};}
                 else if(i==2){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
             }else if(G.screen==SCR_CHAT){
-                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                if(i==0){LOGI("Back");G.login.searchMode=false;G.screen=SCR_SERVER;layoutUI();}
                 else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
+                else if(i==2){G.login.searchMode=!G.login.searchMode;G.login.searchQLen=0;}
             }
         }
     }G.ab=-1;
