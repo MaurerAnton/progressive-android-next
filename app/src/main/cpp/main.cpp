@@ -259,15 +259,23 @@ static void renderServerSelect(){
     float y=G.h*0.04f;
     if(y<G.h*0.02f)y=G.h*0.02f;
 
-    /* Logo - green rounded square matching element_logo_green */
-    rrct((G.w-52.0f)*0.5f,y+4.0f,52.0f,52.0f,16.0f,Vec4{0.15f,0.75f,0.45f,1.0f});
-    /* Inner detail for logo */
-    rrct((G.w-28.0f)*0.5f,y+16.0f,28.0f,28.0f,8.0f,Vec4{0.10f,0.60f,0.35f,1.0f});
-    y+=60.0f;
+    /* Logo - chat bubble with chart line (element_logo_green approximation) */
+    float lx=(G.w-56.0f)*0.5f,ly=y+2.0f;
+    /* Chat bubble outline */
+    rrct(lx,ly,50.0f,30.0f,10.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
+    rrct(lx+2.0f,ly+2.0f,46.0f,26.0f,8.0f,Vec4{C_DARK});
+    /* Bubble tail */
+    rct(lx+14.0f,ly+30.0f,8.0f,10.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
+    rct(lx+16.0f,ly+32.0f,4.0f,10.0f,Vec4{C_DARK});
+    /* Chart line (diagonal through bubble) */
+    for(int s=0;s<4;s++)rct(lx+16.0f+s*8.0f,ly+28.0f-s*5.0f,6.0f,2.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
+    /* Data dots */
+    for(int d=0;d<3;d++)rrct(lx+23.0f+d*10.0f,ly+22.0f-d*5.0f,5.0f,5.0f,2.5f,Vec4{0.06f,0.73f,0.51f,1.0f});
+    y+=56.0f;
 
-    /* App name */
-    txt((G.w-msr("Progressive Chat",24.0f))*0.5f,y,"Progressive Chat",24.0f,Vec4{C_CYAN});
-    y+=36.0f;
+    /* Logotype */
+    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
+    y+=34.0f;
 
     txt((G.w-msr("Choose your protocol",17.0f))*0.5f,y,"Choose your protocol",17.0f,Vec4{C_LABEL});
     y+=30.0f;
