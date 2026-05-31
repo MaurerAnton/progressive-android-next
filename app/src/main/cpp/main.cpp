@@ -424,12 +424,17 @@ static void renderServerSelect(){
     txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
     y+=is+4.0f*G.dp;
 
-    /* Page dots - larger and brighter */
-    float dotR=5.0f*G.dp,dotGap=10.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
-    for(int i=0;i<4;i++)
-        rrct(dotX+i*(dotR*2+dotGap),y,dotR*2,dotR*2,dotR,
-            i==page?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.32f,1.0f});
-    y+=10.0f*G.dp;
+    /* Page dots - large and unmistakable */
+    float dotR=6.0f*G.dp,dotGap=12.0f*G.dp;
+    float dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
+    for(int i=0;i<4;i++){
+        float dx=dotX+i*(dotR*2+dotGap);
+        /* Inactive dot: grey outline */
+        rrct(dx, y, dotR*2, dotR*2, dotR, i==page?Vec4{C_TITLE}:Vec4{0.30f,0.30f,0.38f,1.0f});
+        /* Active dot: inner bright core */
+        if(i==page)rrct(dx+dotR*0.4f, y+dotR*0.4f, dotR*1.2f, dotR*1.2f, dotR*0.6f, Vec4{C_WHITE});
+    }
+    y+=dotR*2+10.0f*G.dp;
 
     /* Buttons side by side */
     float btnW=fw*0.48f,btnH=36.0f*G.dp;
