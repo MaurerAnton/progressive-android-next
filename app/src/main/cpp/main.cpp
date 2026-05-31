@@ -513,12 +513,12 @@ static void renderServerSelect(){
 
     /* === ONBOARDING CAROUSEL (prominent, swipeable) === */
     y+=4.0f*G.dp;
-    const char*carTitles[]={"Own your conversations.","You're in control.","Secure messaging.","Messaging for your team."};
+    const char*carTitles[]={"Own your conversations.","You're in control.","Secure messaging.","For your team."};
     const char*carBodies[]={
         "Same privacy as a face-to-face conversation.",
         "Choose where your conversations are kept. Matrix.",
         "No phone number required. No ads, no tracking.",
-        "Trusted by the world's most secure organisations."
+        "Trusted by the world's most secure organisations. Also great for work."
     };
     float carH=72.0f*G.dp;
     rrct(pad,y,fw,carH,14.0f,Vec4{0.10f,0.10f,0.18f,1.0f});
