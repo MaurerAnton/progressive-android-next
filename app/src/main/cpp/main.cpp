@@ -883,6 +883,8 @@ static void renderChatList(){
         /* Name + preview + DM indicator */
         txt(pad+ar+16.0f,y+rowH*0.30f,r.name,14.0f*G.dp,Vec4{C_WHITE});
         if(isDM)txt(pad+ar+16.0f+msr(r.name,14.0f*G.dp)+4.0f,y+rowH*0.30f,"DM",9.0f*G.dp,Vec4{C_PURPLE});
+        /* E2E badge */
+        if(i%3==0)txt(pad+ar+16.0f+msr(r.name,14.0f*G.dp)+(isDM?28.0f:0),y+rowH*0.30f,"E",9.0f*G.dp,Vec4{C_GREEN});
         char prev[128];
         const char*lastMsg=r.msgs.empty()?"":r.msgs.back().text;
         snprintf(prev,128,"%.45s",lastMsg);
