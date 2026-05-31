@@ -43,9 +43,11 @@ public class MainActivity extends Activity {
 
         overlayEdit = new EditText(this);
         overlayEdit.setBackgroundColor(0x00000000);
-        overlayEdit.setTextColor(0x00000000);
-        overlayEdit.setCursorVisible(false);
-        overlayEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        overlayEdit.setTextColor(0xFFFFFFFF);
+        overlayEdit.setTextSize(16);
+        overlayEdit.setCursorVisible(true);
+        overlayEdit.setHighlightColor(0x335bc0de);
+        overlayEdit.setPadding(14, 0, 14, 0);
         overlayEdit.setImeOptions(EditorInfo.IME_ACTION_DONE);
         overlayEdit.setVisibility(View.GONE);
         overlayEdit.setOnEditorActionListener((v, actionId, event) -> {
@@ -79,19 +81,36 @@ public class MainActivity extends Activity {
         }
     }
 
+    private float[] getFieldPosition(int ff) {
+        float dp = glView.getWidth() / 411.0f;
+        float cardH = 40*dp + 3*(52*dp + 24*dp) + 2*24*dp + 48*dp + 20*dp;
+        float cardY = (glView.getHeight() - cardH) * 0.20f;
+        if (cardY < glView.getHeight() * 0.02f) cardY = glView.getHeight() * 0.02f;
+        float pad = glView.getWidth() * 0.06f;
+        float fw = glView.getWidth() * 0.88f;
+        float fieldTop = cardY + 24*dp + 40*dp + 8*dp + 16*dp;
+        float fieldH = 52 * dp;
+        float fieldGap = 24 * dp;
+        float y = fieldTop + (ff - 1) * (fieldH + fieldGap) + 18;
+        return new float[]{pad, y, fw, fieldH};
+    }
+
     private void updateOverlay() {
         int ff = nativeGetFocusField();
         if (ff > 0) {
             String text = nativeGetFieldText(ff);
             overlayEdit.setText(text);
             overlayEdit.setSelection(text.length());
-            /* Position EditText at field location - coordinates from native */
             float[] pos = getFieldPosition(ff);
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                (int)(glView.getWidth() * 0.80f), 100);
+                (int)pos[2], (int)pos[3]);
             lp.leftMargin = (int)pos[0];
             lp.topMargin = (int)pos[1];
             overlayEdit.setLayoutParams(lp);
+            if (ff == 3) overlayEdit.setInputType(
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            else overlayEdit.setInputType(
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
             overlayEdit.setVisibility(View.VISIBLE);
             overlayEdit.requestFocus();
         } else {
@@ -99,18 +118,6 @@ public class MainActivity extends Activity {
             overlayEdit.setVisibility(View.GONE);
             glView.requestFocus();
         }
-    }
-
-    private float[] getFieldPosition(int ff) {
-        /* Approximate field Y positions based on card layout */
-        float cardY = (float)(glView.getHeight() * 0.20);
-        float pad = glView.getWidth() * 0.06f;
-        float fieldH = 52.0f * (glView.getWidth() / 411.0f);
-        float fieldGap = 24.0f * (glView.getWidth() / 411.0f);
-        float y = cardY + 24.0f * (glView.getWidth() / 411.0f) + 40.0f * (glView.getWidth() / 411.0f)
-                + 8.0f * (glView.getWidth() / 411.0f) + 16.0f * (glView.getWidth() / 411.0f);
-        y += (ff - 1) * (fieldH + fieldGap) + 18.0f;
-        return new float[]{pad, y};
     }
 
     @Override protected void onPause()  { super.onPause(); if (glView != null) glView.onPause(); }
