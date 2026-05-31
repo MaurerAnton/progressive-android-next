@@ -1004,8 +1004,13 @@ static void renderChat(){
         rct(0,sy+sh,(float)G.w,1.0f,Vec4{C_CYAN});
         txt(8.0f,sy+22.0f,"Q:",14.0f*G.dp,Vec4{C_CYAN});
         char sq[64];
-        if(G.login.searchQLen>0)snprintf(sq,64,"%s|",G.login.searchQ);
-        else snprintf(sq,64,"type to search...");
+        if(G.login.searchQLen>0){
+            snprintf(sq,64,"%s|",G.login.searchQ);
+            /* Result count */
+            int scount=0;for(auto&m:r.msgs)if(strstr(m.text,G.login.searchQ)||(m.nick&&strstr(m.nick,G.login.searchQ)))scount++;
+            char rbuf[32];snprintf(rbuf,32,"%d results",scount);
+            txt(G.w-msr(rbuf,11.0f*G.dp)-8.0f,sy+22.0f,rbuf,11.0f*G.dp,Vec4{C_CYAN});
+        }else snprintf(sq,64,"type to search...");
         txt(36.0f,sy+22.0f,sq,14.0f*G.dp,G.login.searchQLen>0?Vec4{C_WHITE}:Vec4{C_HINT});
         /* Close button */
         rct(G.w-40.0f,sy+4.0f,32.0f,sh-8.0f,Vec4{C_DARK});
