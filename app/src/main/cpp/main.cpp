@@ -909,6 +909,8 @@ static void renderChat(){
     btn(G.btns[2],14.0f*G.dp); /* Q search */
     btn(G.btns[3],14.0f*G.dp); /* v scroll down */
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    /* Green connection dot */
+    rrct(120.0f+msr(r.name,16.0f*G.dp)+8.0f,hdrH*0.75f-10.0f*G.dp,10.0f*G.dp,10.0f*G.dp,5.0f*G.dp,Vec4{0.20f,0.72f,0.40f,1.0f});
     if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
@@ -988,74 +990,95 @@ static void renderChat(){
         float my=msgTop+8.0f+rw.y-G.sy;
         if(my+rw.h<msgTop||my>msgBot)continue;
         auto&m=r.msgs[rw.mi];
-        char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
-        txt(6.0f*G.dp,my+lh*0.75f,ts,12.0f*G.dp,Vec4{C_TS},1.0f);
-        float tx=6.0f*G.dp+msr(ts,12.0f*G.dp)+4.0f;
-        if(!m.nick)txt(msgX,my+lh*0.75f,m.text,tsz,Vec4{C_SYSMSG},1.0f);
-        else{
+        bool grouped=false;
+        /* Message grouping: check if same nick as previous message */
+        if(rw.mi>0&&m.nick){
+            auto&pm=r.msgs[rw.mi-1];
+            if(pm.nick&&strcmp(pm.nick,m.nick)==0&&(m.h==pm.h||m.h==pm.h+1))grouped=true;
+        }
+        /* Date separator */
+        if(rw.mi==0||(rw.mi>0&&(m.h!=r.msgs[rw.mi-1].h||(m.h-r.msgs[rw.mi-1].h>3)))){
+            char db[32];snprintf(db,32,"--- %02d:%02d ---",m.h,m.m);
+            txt((G.w-msr(db,10.0f*G.dp))*0.5f,my-2.0f,db,10.0f*G.dp,Vec4{C_TS});
+            my+=lh;
+        }
+        /* Message bubble for user messages */
+        if(m.nick){
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
-            float ax=tx-2.0f,ay=my+lh*0.3f,ar=lh*0.35f;
-            rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
-            char init[2]={(char)m.nick[0],0};
-            txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
-            tx=ax+ar*2+6.0f;
-            const char* tpref="";
-            Vec4 tc=nc;
+            float bx=6.0f*G.dp,by=my,bw=G.w-20.0f*G.dp,bh=rw.h+4.0f;
+            float ar=lh*0.40f,ax=bx+8.0f,ay=by+lh*0.3f;
+            if(!grouped){
+                rrct(bx,by,bw,bh,10.0f,Vec4{0.10f,0.10f,0.16f,1.0f});
+                rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
+                char init[2]={(char)m.nick[0],0};
+                txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
+                char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
+                txt(bx+ar*2+16.0f,by+lh*0.75f,ts,10.0f*G.dp,Vec4{C_TS});
+                txt(bx+ar*2+16.0f+msr(ts,10.0f*G.dp)+4.0f,by+lh*0.75f,m.nick,tsz,nc,1.05f);
+            }
+            /* Text start position */
+            float ttx=bx+ar*2+16.0f+msr("[00:00]",10.0f*G.dp)+4.0f+msr(m.nick,tsz)+4.0f;
+            if(grouped)ttx=bx+14.0f*G.dp;
+            const char* tpref="";Vec4 tc=nc;
             if(m.type==1){tpref="[IMG] ";tc=Vec4{0.30f,0.65f,0.85f,1.0f};}
             else if(m.type==2){tpref="[FILE] ";tc=Vec4{0.85f,0.65f,0.30f,1.0f};}
             else if(m.type==3){tpref="[AUDIO] ";tc=Vec4{0.55f,0.45f,0.85f,1.0f};}
             else if(m.type==4){tpref="[POLL] ";tc=Vec4{0.25f,0.70f,0.55f,1.0f};}
             else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
-            if(m.type>0){txt(tx,my+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);tx+=msr(tpref,10.0f*G.dp);}
-            txt(tx,my+lh*0.75f,m.nick,tsz,nc,1.05f);
-            tx+=msr(m.nick,tsz)+4.0f;
-            /* Word-wrap text across multiple lines */
-            float textW=msgMaxW-tx+2.0f*G.dp;
-            float lx=tx,ly=my;
-            const char*p=m.text;
-            char word[128];int wi=0;
+            float textW=G.w-ttx-20.0f*G.dp;
+            float lx=ttx,ly=by;
+            if(!grouped&&m.type>0){txt(ttx,by+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);ttx+=msr(tpref,10.0f*G.dp);lx=ttx;}
+            /* Word-wrap text */
+            const char*p=m.text;char word[128];int wi=0;
             while(*p){
-                if(*p==' '){
-                    if(wi>0){word[wi]=0;wi=0;
-                        float ww=msr(word,tsz);
-                        if(lx+ww>tx+textW&&lx>tx+2.0f){ly+=lh;lx=tx;}
-                        txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);
-                        lx+=ww+msr(" ",tsz);
-                    }else{lx+=msr(" ",tsz);}
-                }else{
-                    if(wi<127)word[wi++]=(unsigned char)*p;
-                }
-                p++;
-            }
-            if(wi>0){word[wi]=0;
-                float ww=msr(word,tsz);
-                if(lx+ww>tx+textW&&lx>tx+2.0f){ly+=lh;lx=tx;}
-                txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);
-            }
+                if(*p==' '){if(wi>0){word[wi]=0;wi=0;
+                    float ww=msr(word,tsz);
+                    if(lx+ww>bx+bw-8.0f&&lx>bx+4.0f){ly+=lh;lx=ttx;}
+                    txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);lx+=ww+msr(" ",tsz);
+                }else{lx+=msr(" ",tsz);}}else{if(wi<127)word[wi++]=(unsigned char)*p;}p++;}
+            if(wi>0){word[wi]=0;float ww=msr(word,tsz);
+                if(lx+ww>bx+bw-8.0f&&lx>bx+4.0f){ly+=lh;lx=ttx;}
+                txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);}
+        }else{
+            txt(6.0f*G.dp,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         }
     }
     glDisable(GL_SCISSOR_TEST);
 
-    /* Reply quote bar */
+    /* Reply quote bar with message preview */
     if(G.login.replyTo>=0&&G.login.replyTo<(int)r.msgs.size()){
         auto&rm=r.msgs[G.login.replyTo];
-        float ry=msgTop;
-        rct(0,ry,(float)G.w,24.0f*G.dp,Vec4{0.06f,0.06f,0.10f,1.0f});
-        rct(0,ry,3.0f,24.0f*G.dp,Vec4{C_CYAN});
-        char rbuf[128];
-        snprintf(rbuf,128,"Replying to %s",rm.nick?rm.nick:"system");
-        txt(14.0f*G.dp,ry+15.0f*G.dp,rbuf,11.0f*G.dp,Vec4{C_CYAN});
-        rct(G.w-32.0f,ry+2.0f,24.0f,20.0f*G.dp,Vec4{0,0,0,0});
-        txt(G.w-28.0f,ry+15.0f*G.dp,"X",11.0f*G.dp,Vec4{0.8f,0.3f,0.3f,1.0f});
-        msgTop+=24.0f*G.dp;
+        float ry=msgTop,rh=32.0f*G.dp;
+        rct(0,ry,(float)G.w,rh,Vec4{0.05f,0.05f,0.10f,1.0f});
+        rct(0,ry,4.0f,rh,Vec4{C_CYAN});
+        char rbuf[128];snprintf(rbuf,128,"%s: %.40s",rm.nick?rm.nick:"system",rm.text);
+        txt(14.0f*G.dp,ry+12.0f*G.dp,rbuf,11.0f*G.dp,Vec4{C_WHITE});
+        txt(14.0f*G.dp,ry+26.0f*G.dp,"Replying - tap X to cancel",9.0f*G.dp,Vec4{C_LABEL});
+        rct(G.w-32.0f,ry+4.0f,24.0f,20.0f*G.dp,Vec4{C_DARK});
+        txt(G.w-28.0f,ry+18.0f*G.dp,"X",11.0f*G.dp,Vec4{0.9f,0.3f,0.3f,1.0f});
+        msgTop+=rh;
     }
 
+    /* Typing indicator */
+    {float ty=msgBot-4.0f,th=18.0f*G.dp;
+    rct(0,ty-th,(float)G.w,th,Vec4{0,0,0,0});
+    static int dotFrame=0;dotFrame++;
+    const char*dots[]={"","  .","  ..","  ..."};
+    char tbuf[64];snprintf(tbuf,64,"%s is typing%s",r.msgs.size()>0&&r.msgs[3].nick?r.msgs[3].nick:"alice",dots[(dotFrame/15)%4]);
+    txt(14.0f*G.dp,ty-2.0f,tbuf,11.0f*G.dp,Vec4{C_GREEN});}
+
     /* Bottom input */
-    float ibH=40.0f*G.dp;
+    float ibH=44.0f*G.dp;
     rct(0,msgBot,(float)G.w,ibH,Vec4{C_INPUT});
     rct(0,msgBot,(float)G.w,1.0f,Vec4{C_DIVIDER});
-    rct(6.0f,msgBot+6.0f,G.w-74.0f,ibH-12.0f,Vec4{C_DARK});
+    /* Attachment + emoji buttons */
+    rct(4.0f,msgBot+4.0f,36.0f,ibH-8.0f,Vec4{C_DARK});
+    txt(12.0f,msgBot+ibH*0.62f,"+",16.0f*G.dp,Vec4{C_LABEL});
+    rct(G.w-62.0f,msgBot+4.0f,48.0f,ibH-8.0f,Vec4{C_DARK});
+    txt(G.w-52.0f,msgBot+ibH*0.62f,":)",12.0f*G.dp,Vec4{C_LABEL});
+    /* Text field */
+    rct(44.0f,msgBot+6.0f,G.w-114.0f,ibH-12.0f,Vec4{C_DARK});
     if(G.login.chatInputLen>0){
         char inbuf[256];memcpy(inbuf,G.login.chatInput,G.login.chatInputLen);inbuf[G.login.chatInputLen]=0;
         txt(14.0f,msgBot+ibH*0.65f,inbuf,13.0f*G.dp,Vec4{C_WHITE});
