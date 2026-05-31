@@ -78,7 +78,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_SERVER,SCR_LOGIN,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -237,7 +237,8 @@ static void layoutUI(){
     G.nb=0;
     switch(G.screen){
         case SCR_SERVER: G.nb=3; break; /* 3 server option buttons */
-        case SCR_LOGIN: G.nb=2; break;
+        case SCR_MATRIX: G.nb=2; break;
+        case SCR_IRC: G.nb=2; break;
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(6,6,42,42,"#",Vec4{C_DARK});
             float dy=60.0f;
@@ -290,8 +291,8 @@ static void renderServerSelect(){
         "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
 
-/* ====== LOGIN SCREEN ====== */
-static void renderLogin(){
+/* ====== IRC AUTH SCREEN ====== */
+static void renderIrcAuth(){
     float pad=G.w*0.08f,fw=G.w*0.84f;
     float fieldH=48.0f,fieldGap=24.0f;
     int nFields=4;
@@ -354,6 +355,51 @@ static void renderLogin(){
     btn(G.btns[1],20.0f);
 
     /* Footer */
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
+        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
+}
+
+/* ====== MATRIX LOGIN SCREEN ====== */
+static void renderMatrixLogin(){
+    float pad=G.w*0.08f,fw=G.w*0.84f;
+    float fieldH=48.0f,fieldGap=20.0f,btnH=46.0f;
+    float cardPad=20.0f,titleH=36.0f;
+    float cardH=titleH+3*(fieldH+fieldGap)+cardPad*2+btnH+56.0f;
+    float cardY=(G.h-cardH-30.0f)*0.32f;
+    if(cardY<G.h*0.03f)cardY=G.h*0.03f;
+
+    rrct(pad-8.0f,cardY,fw+16.0f,cardH,16.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+    rrct(pad-7.0f,cardY+1.0f,fw+14.0f,cardH-2.0f,15.0f,Vec4{0.17f,0.17f,0.23f,1.0f});
+
+    float cy=cardY+cardPad;
+    txt(pad+fw*0.04f,cy+10.0f,"Sign in",24.0f,Vec4{C_TITLE});
+    cy+=titleH+6.0f;
+    rct(pad,cy,fw,1.0f,Vec4{C_DIVIDER});
+    cy+=14.0f;
+
+    auto field=[&](const char*label,const char*val){
+        txt(pad+4.0f,cy,label,13.0f,Vec4{C_TITLE},1.05f);
+        rrct(pad,cy+16.0f,fw,fieldH,10.0f,Vec4{0.12f,0.12f,0.17f,1.0f});
+        if(val&&*val)txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,val,16.0f,Vec4{C_WHITE},1.03f);
+        cy+=fieldH+fieldGap;
+    };
+
+    field("Homeserver URL","matrix.org");
+    field("Username","@user:matrix.org");
+    field("Password","");
+
+    cy+=8.0f;
+    G.btns[0].rect={pad,cy,fw,btnH};
+    G.btns[0].text="Sign in";
+    G.btns[0].color=Vec4{C_CYAN};
+    btn(G.btns[0],20.0f);
+    cy+=btnH+12.0f;
+
+    txt((G.w-msr("Create account",16.0f))*0.5f,cy+6.0f,"Create account",16.0f,Vec4{C_CYAN});
+    G.btns[1].rect={(G.w-msr("Create account",16.0f))*0.5f-8.0f,cy,msr("Create account",16.0f)+16.0f,28.0f};
+    G.btns[1].text=nullptr;
+    G.btns[1].color=Vec4{0,0,0,0};
+
     txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
         "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
@@ -431,7 +477,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_LOGIN:renderLogin();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -452,11 +498,15 @@ static void tu(float x,float y){
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
             if(G.screen==SCR_SERVER){
-                if(i==0){LOGI("matrix.org");G.screen=SCR_LOGIN;layoutUI();}
-                else if(i==1){LOGI("Custom");G.screen=SCR_LOGIN;layoutUI();}
-                else if(i==2){LOGI("IRC");G.screen=SCR_LOGIN;layoutUI();}
+                if(i==0){LOGI("matrix.org");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==1){LOGI("Custom");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==2){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
             }
-            else if(G.screen==SCR_LOGIN){
+            else if(G.screen==SCR_MATRIX){
+                if(i==0){LOGI("Sign in");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==1){LOGI("Create account");}
+            }
+            else if(G.screen==SCR_IRC){
                 if(i==0){G.login.tls=!G.login.tls;G.btns[0].color=G.login.tls?Vec4{C_TOGGLE_TRACK_ON}:Vec4{C_TOGGLE_TRACK_OFF};}
                 else if(i==1){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
             }else if(G.screen==SCR_CHAT){
