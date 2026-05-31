@@ -1227,10 +1227,14 @@ static void renderChat(){
     txt(10.0f,msgBot+ibH*0.62f,"o",16.0f*G.dp,Vec4{C_GREEN}); /* mic */
     rct(40.0f,msgBot+4.0f,32.0f,ibH-8.0f,Vec4{C_DARK});
     txt(46.0f,msgBot+ibH*0.62f,"+",16.0f*G.dp,Vec4{C_LABEL}); /* attach */
+    /* Sticker button */
+    rct(G.w-110.0f,msgBot+4.0f,40.0f,ibH-8.0f,Vec4{C_DARK});
+    txt(G.w-102.0f,msgBot+ibH*0.62f,"G",11.0f*G.dp,Vec4{C_PURPLE}); /* GIF */
+    /* Emoji button */
     rct(G.w-62.0f,msgBot+4.0f,48.0f,ibH-8.0f,Vec4{C_DARK});
     txt(G.w-52.0f,msgBot+ibH*0.62f,":)",12.0f*G.dp,Vec4{C_LABEL});
     /* Text field */
-    rct(76.0f,msgBot+6.0f,G.w-146.0f,ibH-12.0f,Vec4{C_DARK});
+    rct(76.0f,msgBot+6.0f,G.w-194.0f,ibH-12.0f,Vec4{C_DARK});
     if(G.login.chatInputLen>0){
         char inbuf[256];memcpy(inbuf,G.login.chatInput,G.login.chatInputLen);inbuf[G.login.chatInputLen]=0;
         txt(14.0f,msgBot+ibH*0.65f,inbuf,13.0f*G.dp,Vec4{C_WHITE});
