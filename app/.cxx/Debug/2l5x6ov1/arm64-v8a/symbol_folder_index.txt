@@ -1,1 +1,0 @@
-/home/bym/games/sdfont-android-login/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a

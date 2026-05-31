@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/bym/games/sdfont-android-login/app/.cxx/Debug/36z6986z/arm64-v8a",
-  "command": "/home/bym/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/bym/android-sdk/ndk/25.1.8937393/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dsdfontlogin_EXPORTS -I/home/bym/games/sdfont-android-login/app/src/main/cpp -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -std=gnu++17 -o CMakeFiles/sdfontlogin.dir/main.cpp.o -c /home/bym/games/sdfont-android-login/app/src/main/cpp/main.cpp",
-  "file": "/home/bym/games/sdfont-android-login/app/src/main/cpp/main.cpp"
-}
-]
