@@ -258,7 +258,7 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_SERVER: G.nb=11; break; /* 3 buttons + 2 chips + 6 cards */
+        case SCR_SERVER: G.nb=12; break; /* 3 buttons + settings + 2 chips + 6 cards */
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
@@ -365,10 +365,10 @@ static void renderServerSelect(){
     bool openSrc=(G.login.cat==0);
     rct(pad,y,chipW,chipH,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[3].rect={pad,y,chipW,chipH};
+    G.btns[4].rect={pad,y,chipW,chipH};
     rct(pad+chipW+10.0f,y,chipW,chipH,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[4].rect={pad+chipW+10.0f,y,chipW,chipH};
+    G.btns[5].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
 
     txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
@@ -402,8 +402,8 @@ static void renderServerSelect(){
         txt(pad+56.0f*G.dp,y+14.0f*G.dp,cards[i].title,12.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
         txt(pad+56.0f*G.dp,y+32.0f*G.dp,cards[i].desc,10.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
         if(cards[i].dim)txt(pad+fw-70.0f,y+14.0f*G.dp,"Soon",9.0f*G.dp,Vec4{C_LABEL});
-        G.btns[5+i].rect={pad,y,fw,cardH};
-        G.btns[5+i].color=cards[i].accent;
+        G.btns[6+i].rect={pad,y,fw,cardH};
+        G.btns[6+i].color=cards[i].accent;
         y+=cardH+cardGap;
     }
 
@@ -417,6 +417,8 @@ static void renderServerSelect(){
     G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};btn(G.btns[1],12.0f*G.dp);
     y+=btnH+8.0f*G.dp;
     G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};btn(G.btns[2],12.0f*G.dp);
+    /* Settings gear at bottom-right */
+    G.btns[3].rect={G.w-50.0f,G.h-50.0f,40.0f,40.0f};G.btns[3].text="#";G.btns[3].color=Vec4{C_DARK};btn(G.btns[3],16.0f*G.dp);
 
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
@@ -624,6 +626,46 @@ static void renderSignup(){
         "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
+/* ====== PROFILE SCREEN ====== */
+static void renderProfile(){
+    G.btns[0].rect={8,8,50,40};G.btns[0].text="<";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],14.0f*G.dp);
+    float pad=G.w*0.08f,fw=G.w*0.84f,y=G.h*0.08f;
+    /* Avatar */
+    float ar=G.w*0.12f;rrct((G.w-ar)*0.5f,y,ar,ar,ar*0.5f,Vec4{C_CYAN});
+    char init[2]={G.login.profileNick[0]?G.login.profileNick[0]:'?',0};
+    txt((G.w-msr(init,ar*0.4f))*0.5f,y+ar*0.6f,init,ar*0.4f,Vec4{C_WHITE},1.0f);
+    y+=ar+16.0f*G.dp;
+    txt((G.w-msr(G.login.profileNick,18.0f*G.dp))*0.5f,y,G.login.profileNick,18.0f*G.dp,Vec4{C_WHITE});
+    y+=28.0f*G.dp;
+    txt((G.w-msr("@user:matrix.org",13.0f*G.dp))*0.5f,y,"@user:matrix.org",13.0f*G.dp,Vec4{C_LABEL});
+    y+=40.0f*G.dp;
+    const char* actions[]={"Send message","View details","Mention","Block user"};
+    for(int i=0;i<4;i++){
+        rrct(pad,y,fw,44.0f*G.dp,10.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+        txt(pad+16.0f,y+28.0f*G.dp,actions[i],14.0f*G.dp,Vec4{C_WHITE});
+        G.btns[1+i].rect={pad,y,fw,44.0f*G.dp};
+        G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
+        y+=48.0f*G.dp;
+    }
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+}
+
+/* ====== SETTINGS SCREEN ====== */
+static void renderSettings(){
+    G.btns[0].rect={8,8,50,40};G.btns[0].text="<";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],14.0f*G.dp);
+    float pad=G.w*0.08f,fw=G.w*0.84f,y=G.h*0.10f;
+    txt(pad,y,"Settings",22.0f*G.dp,Vec4{C_TITLE});
+    y+=40.0f*G.dp;rct(pad,y,fw,1,Vec4{C_DIVIDER});y+=16.0f*G.dp;
+    const char* items[]={"Notifications","Appearance","Privacy","About"};
+    for(int i=0;i<4;i++){
+        rrct(pad,y,fw,44.0f*G.dp,8.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+        txt(pad+16.0f,y+28.0f*G.dp,items[i],14.0f*G.dp,Vec4{C_WHITE});
+        y+=48.0f*G.dp;
+    }
+    G.btns[1].rect={pad,y,fw,40.0f*G.dp};G.btns[1].text="Progressive Chat v0.5.5-pre";G.btns[1].color=Vec4{0,0,0,0};
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+}
+
 /* ====== CHAT SCREEN ====== */
 static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
@@ -705,7 +747,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -731,10 +773,11 @@ static void tu(float x,float y){
                 if(i==0){LOGI("Sign In");}
                 else if(i==1){LOGI("Create account");}
                 else if(i==2){LOGI("Test");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
-                else if(i==3){G.login.cat=0;}
-                else if(i==4){G.login.cat=1;}
-                else if(i==5&&G.login.cat==0){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==6&&G.login.cat==0){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                else if(i==3){LOGI("Settings");G.screen=SCR_SETTINGS;layoutUI();}
+                else if(i==4){G.login.cat=0;}
+                else if(i==5){G.login.cat=1;}
+                else if(i==6&&G.login.cat==0){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==7&&G.login.cat==0){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
                 /* 7-10 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
@@ -748,6 +791,12 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_SIGNUP){
                 if(i==0){LOGI("Back");G.screen=SCR_MATRIX;layoutUI();}
+            }
+            else if(G.screen==SCR_PROFILE){
+                if(i==0){LOGI("Back");G.screen=SCR_CHAT;layoutUI();}
+            }
+            else if(G.screen==SCR_SETTINGS){
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
             }
             else if(G.screen==SCR_IRC){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}

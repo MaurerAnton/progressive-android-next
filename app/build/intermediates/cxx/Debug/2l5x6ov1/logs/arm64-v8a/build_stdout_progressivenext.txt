@@ -1,7 +1,3 @@
 ninja: Entering directory `/home/bym/games/progressive-android-next/app/.cxx/Debug/2l5x6ov1/arm64-v8a'
 [1/2] Building CXX object CMakeFiles/progressivenext.dir/main.cpp.o
-/home/bym/games/progressive-android-next/app/src/main/cpp/main.cpp:708:12: warning: enumeration values 'SCR_PROFILE' and 'SCR_SETTINGS' not handled in switch [-Wswitch]
-  708 |     switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_CHAT:renderChat();break;}
-      |            ^~~~~~~~
-1 warning generated.
 [2/2] Linking CXX shared library /home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so
