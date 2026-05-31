@@ -320,6 +320,17 @@ static void genData(){
     G.rooms.push_back(rm);
 }
 
+static int captureCount=0;
+static void gpuCapture(){
+    unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+    char fn[128];snprintf(fn,128,"/data/data/chat.progressive.app.next/gpu_%d.ppm",captureCount++);
+    FILE*f=fopen(fn,"wb");
+    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+        fclose(f);LOGI("GPU cap %d saved",captureCount-1);}
+    free(gpx);
+}
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
@@ -1652,6 +1663,15 @@ static bool initGL(JNIEnv*env,jobject am){
     snprintf(G.login.pass,64,"temproacc5");
     G.login.passLen=strlen(G.login.pass);
     genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    /* Capture initial frame immediately (before FreecessController) */
+    frame();
+    {unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+    FILE*f=fopen("/data/data/chat.progressive.app.next/gpu_init.ppm","wb");
+    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+        fclose(f);LOGI("GPU init capture %dx%d",G.w,G.h);}
+    free(gpx);}
     LOGI("init ok");return true;
 }
 

@@ -297,6 +297,8 @@ public class MainActivity extends Activity {
         public void onSurfaceCreated(GL10 gl, EGLConfig c) {}
         public void onSurfaceChanged(GL10 gl, int w, int h) {
             nativeInit(w, h, getAssets()); glReady = true; glView.requestRender();
+            /* Capture GPU after 2s */
+            mainHandler.postDelayed(() -> nativeCaptureGPU(), 2000);
             /* Auto-login test after 3 seconds */
             mainHandler.postDelayed(() -> {
                 if (accessToken == null) {
