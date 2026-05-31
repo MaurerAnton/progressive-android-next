@@ -806,6 +806,13 @@ static void renderSettings(){
         G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
         y+=48.0f*G.dp;
     }
+    /* Session management */
+    y+=16.0f*G.dp;
+    rct(pad,y,fw,1,Vec4{C_DIVIDER});y+=16.0f*G.dp;
+    txt(pad,y,"Sessions",14.0f*G.dp,Vec4{C_LABEL});y+=22.0f*G.dp;
+    txt(pad,y,"This device - Active now",11.0f*G.dp,Vec4{C_GREEN});y+=18.0f*G.dp;
+    txt(pad,y,"Linux Firefox - 2h ago",11.0f*G.dp,Vec4{C_HINT});y+=18.0f*G.dp;
+    txt(pad,y,"Android Phone - 1d ago",11.0f*G.dp,Vec4{C_HINT});
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
