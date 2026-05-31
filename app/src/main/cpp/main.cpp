@@ -1082,7 +1082,7 @@ static void renderChat(){
 
     /* Message count + scroll indicator */
     char mcBuf[64];
-    snprintf(mcBuf,64,"%d msgs | scroll: %d/%d",(int)r.msgs.size(),(int)G.sy,(int)G.ms);
+    snprintf(mcBuf,64,"%d msgs | pos %d/%d | %s",(int)r.msgs.size(),(int)G.sy,(int)G.ms,G.mtxState==MTX_CONNECTING?"syncing...":"live");
     txt(120.0f,hdrH+4.0f+10.0f*G.dp,mcBuf,9.0f*G.dp,Vec4{C_HINT});
 
     /* Search overlay */
