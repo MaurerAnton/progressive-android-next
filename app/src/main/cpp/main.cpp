@@ -99,6 +99,7 @@ static struct{
     int activeRoom;float sy,sv,ms;
     Screen prevScreen;
     MtxState mtxState;char mtxError[128];
+    char notifyMsg[128];int notifyFrames;
     int sid;float sl;
     DrawerState ds;float dx,dw;
     Button btns[20];int nb,ab;
@@ -1195,6 +1196,13 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
+    /* Notification banner */
+    if(G.notifyFrames>0){
+        G.notifyFrames--;
+        float ny=G.h-90.0f*G.dp;
+        rrct(G.w*0.1f,ny,G.w*0.8f,36.0f*G.dp,12.0f,Vec4{0.08f,0.08f,0.18f,0.95f});
+        txt(G.w*0.15f,ny+22.0f*G.dp,G.notifyMsg,12.0f*G.dp,Vec4{C_CYAN});
+    }
     switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_ROOMINFO:renderRoomInfo();break;case SCR_CHATLIST:renderChatList();break;case SCR_CHAT:renderChat();break;}
     renderMtxStatus();
 }
@@ -1236,7 +1244,11 @@ static void td(float x,float y){
     }
     /* Input field tap in chat -> focus for keyboard */
     if(G.screen==SCR_CHAT&&y>G.h-48.0f*G.dp){
-        G.login.focusField=4;return;
+        G.login.focusField=4;
+        /* Simulate typing notification */
+        snprintf(G.notifyMsg,128,"typing indicator sent");
+        G.notifyFrames=60;
+        return;
     }
     /* Message tap in chat: find message index for long-press or profile tap */
     if(G.screen==SCR_CHAT&&x>20.0f*G.dp&&x<G.w-80.0f){
@@ -1721,7 +1733,10 @@ static void parseSyncResponse(JNIEnv* env,const char* json){
             }else break;
         }else pos++;
     }
-    G.activeRoom=0;G.screen=SCR_CHATLIST;layoutUI();
+    G.activeRoom=0;G.screen=SCR_CHATLIST;
+    snprintf(G.notifyMsg,128,"%d rooms loaded",(int)G.rooms.size());
+    G.notifyFrames=180; /* show for 3 seconds */
+    layoutUI();
 }
 
 JNIEXPORT void JNICALL
