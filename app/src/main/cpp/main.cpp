@@ -502,19 +502,23 @@ static void renderServerSelect(){
     txt(ctx,y+carH*0.22f,carTitles[page],13.0f*G.dp,Vec4{C_CYAN});
     char bodyBuf[80];snprintf(bodyBuf,80,"%.50s",carBodies[page]);
     txt(ctx,y+carH*0.58f,bodyBuf,10.0f*G.dp,Vec4{C_LABEL});
-    /* Large bright dots */
-    int nPages=4;float dotR=6.0f*G.dp,dotGap=18.0f*G.dp;
-    float dotW2=nPages*(dotR*2+dotGap)-dotGap;
-    float dotX2=pad+(fw-dotW2)*0.5f,dotY2=y+carH-dotR*2-4.0f*G.dp;
-    for(int i=0;i<nPages;i++){
-        Vec4 dc=i==page?Vec4{0.95f,0.35f,0.35f,1.0f}:Vec4{0.40f,0.40f,0.48f,1.0f};
-        rrct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dotR,dc);
-    }
     /* Swipe hint */
     txt(pad+fw-msr("< swipe >",9.0f*G.dp)-8.0f,y+carH-6.0f*G.dp,"< swipe >",9.0f*G.dp,Vec4{C_HINT});
     /* Register carousel as a button for swipe detection */
     G.btns[10].rect={pad,y,fw,carH};G.btns[10].color=Vec4{0,0,0,0};G.btns[10].text=nullptr;
     y+=carH+4.0f*G.dp;
+
+    /* Page dots row - separate line BELOW carousel, with bright background */
+    rct(pad,y,fw,28.0f*G.dp,Vec4{0.04f,0.04f,0.08f,1.0f});
+    int nPages=4;float dotR=7.0f*G.dp,dotGap=20.0f*G.dp;
+    float dotW2=nPages*(dotR*2+dotGap)-dotGap;
+    float dotX2=pad+(fw-dotW2)*0.5f,dotY2=y+14.0f*G.dp-dotR;
+    for(int i=0;i<nPages;i++){
+        Vec4 dc=i==page?Vec4{0.36f,0.77f,0.90f,1.0f}:Vec4{0.25f,0.25f,0.32f,1.0f};
+        rct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dc);
+    }
+    txt(pad+fw-msr("1 2 3 4",10.0f*G.dp)-4.0f,y+20.0f*G.dp,"1 2 3 4",10.0f*G.dp,Vec4{C_HINT});
+    y+=28.0f*G.dp+4.0f*G.dp;
 
     /* === BOTTOM BUTTONS === */
     rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
