@@ -1090,6 +1090,9 @@ static void renderChat(){
             if(!grouped){
                 rrct(bx,by,bw,bh,10.0f,bubbleBg);
                 rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
+                /* Presence dot on avatar */
+                float pdx=ax+ar*1.5f,pdy=ay+ar*0.6f,pdr=ar*0.3f;
+                rrct(pdx,pdy,pdr*2,pdr*2,pdr,Vec4{0.20f,0.72f,0.40f,1.0f});
                 char init[2]={(char)m.nick[0],0};
                 txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
                 char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
