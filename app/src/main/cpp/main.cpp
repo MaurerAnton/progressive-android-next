@@ -342,7 +342,7 @@ static void renderOnboard(){
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
 static void renderServerSelect(){
-    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=58.0f*G.dp,cardGap=6.0f*G.dp;
+    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=52.0f*G.dp,cardGap=12.0f*G.dp;
     float chipH=36.0f*G.dp;
     int page=G.login.carouselPage;
     float y=G.h*0.02f;
@@ -395,11 +395,11 @@ static void renderServerSelect(){
     for(int i=0;i<nCards;i++){
         float alpha=cards[i].dim?0.55f:1.0f;
         rct(pad,y,fw,cardH,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
-        rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
-        txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+60.0f*G.dp,y+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_LABEL});
+        rct(pad,y,3.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
+        rrct(pad+10.0f*G.dp,y+6.0f*G.dp,38.0f*G.dp,38.0f*G.dp,10.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
+        txt(pad+56.0f*G.dp,y+14.0f*G.dp,cards[i].title,12.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+56.0f*G.dp,y+32.0f*G.dp,cards[i].desc,10.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-70.0f,y+14.0f*G.dp,"Soon",9.0f*G.dp,Vec4{C_LABEL});
         G.btns[5+i].rect={pad,y,fw,cardH};
         G.btns[5+i].color=cards[i].accent;
         y+=cardH+cardGap;
