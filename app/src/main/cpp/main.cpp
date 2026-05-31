@@ -987,6 +987,9 @@ static void renderChatList(){
     /* Loading more indicator */
     txt(pad+(fw-msr("Pull down to refresh",11.0f*G.dp))*0.5f,y+8.0f*G.dp,"Pull down to refresh",11.0f*G.dp,Vec4{C_HINT});
     y+=22.0f*G.dp;
+    /* Pull to refresh hint */
+    txt(pad+(fw-msr("Swipe down to refresh",10.0f*G.dp))*0.5f,y+6.0f*G.dp,"Swipe down to refresh",10.0f*G.dp,Vec4{C_HINT});
+    y+=18.0f*G.dp;
     /* Profile button at bottom */
     float btnH=36.0f*G.dp;
     float by=G.h-btnH-30.0f*G.dp;
@@ -1158,6 +1161,12 @@ static void renderChat(){
         if(rw.mi>0&&m.nick){
             auto&pm=r.msgs[rw.mi-1];
             if(pm.nick&&strcmp(pm.nick,m.nick)==0&&(m.h==pm.h||m.h==pm.h+1))grouped=true;
+        }
+        /* Unread marker after first 5 messages */
+        if(rw.mi==5){
+            rct(0,my-2.0f,(float)G.w,1.0f,Vec4{C_CYAN});
+            txt((G.w-msr("--- New messages ---",10.0f*G.dp))*0.5f,my+lh*0.5f,"--- New messages ---",10.0f*G.dp,Vec4{C_CYAN});
+            my+=lh;
         }
         /* Date separator */
         if(rw.mi==0||(rw.mi>0&&(m.h!=r.msgs[rw.mi-1].h||(m.h-r.msgs[rw.mi-1].h>3)))){
