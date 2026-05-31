@@ -587,7 +587,7 @@ static void renderServerSelect(){
     txt((G.w-msr("Check for updates",9.0f*G.dp))*0.5f,G.h-32.0f,"Check for updates",9.0f*G.dp,Vec4{C_HINT});
     /* Help link */
     txt((G.w-msr("Need help? Learn more",10.0f*G.dp))*0.5f,G.h-42.0f,"Need help? Learn more",10.0f*G.dp,Vec4{C_CYAN});
-    txt((G.w-msr("Privacy Policy",8.0f*G.dp))*0.5f,G.h-50.0f,"Privacy Policy",8.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Terms  |  Privacy  |  Cookies",9.0f*G.dp))*0.5f,G.h-52.0f,"Terms  |  Privacy  |  Cookies",9.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
