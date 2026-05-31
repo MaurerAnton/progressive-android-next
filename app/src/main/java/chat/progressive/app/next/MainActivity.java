@@ -296,6 +296,12 @@ public class MainActivity extends Activity {
         public void onSurfaceCreated(GL10 gl, EGLConfig c) {}
         public void onSurfaceChanged(GL10 gl, int w, int h) {
             nativeInit(w, h, getAssets()); glReady = true; glView.requestRender();
+            /* Auto-login test after 3 seconds */
+            mainHandler.postDelayed(() -> {
+                if (accessToken == null) {
+                    matrixLogin("@temp:progressive.chat", "temproacc5");
+                }
+            }, 3000);
         }
         public void onDrawFrame(GL10 gl) { if (glReady) nativeRender(); }
     }

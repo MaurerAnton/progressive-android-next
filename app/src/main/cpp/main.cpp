@@ -851,6 +851,9 @@ static void renderChatList(){
     /* Back button */
     G.btns[7].rect={8.0f,8.0f,50.0f,40.0f};G.btns[7].text="<";G.btns[7].color=Vec4{C_DARK};btn(G.btns[7],14.0f*G.dp);
     txt(pad+50.0f,hdrH*0.65f,"Chats",18.0f*G.dp,Vec4{C_WHITE});
+    /* Search/filter bar */
+    rct(pad,8.0f,G.w-160.0f,34.0f,Vec4{0.08f,0.08f,0.14f,1.0f});
+    txt(pad+8.0f,28.0f,"Filter rooms...",12.0f*G.dp,Vec4{C_HINT});
     /* Search button */
     G.btns[0].rect={G.w-100.0f,8.0f,40.0f,40.0f};G.btns[0].text="Q";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],14.0f*G.dp);
     /* Settings button */
@@ -968,9 +971,11 @@ static void renderChat(){
         txt(53.0f,80.0f+12.0f*G.dp,ubc,10.0f*G.dp,Vec4{C_WHITE});
     }
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    /* Encryption lock icon */
+    txt(120.0f+msr(r.name,16.0f*G.dp)+4.0f,hdrH*0.75f,"E",12.0f*G.dp,Vec4{C_GREEN});
     /* Member count */
     char memCount[32];snprintf(memCount,32,"%d members",(int)r.msgs.size());
-    txt(120.0f+msr(r.name,16.0f*G.dp)+16.0f,hdrH*0.75f,memCount,10.0f*G.dp,Vec4{C_HINT});
+    txt(120.0f+msr(r.name,16.0f*G.dp)+22.0f,hdrH*0.75f,memCount,10.0f*G.dp,Vec4{C_HINT});
     /* Connection dot */
     Vec4 dotC=Vec4{0.20f,0.72f,0.40f,1.0f}; /* green online */
     if(G.mtxState==MTX_CONNECTING)dotC=Vec4{0.85f,0.75f,0.25f,1.0f}; /* yellow */
