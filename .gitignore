@@ -1,0 +1,15 @@
+*.apk
+*.aab
+*.dex
+*.class
+/bin/
+/build/
+/.cxx/
+.gradle/
+/local.properties
+*.iml
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
