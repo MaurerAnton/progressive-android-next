@@ -159,18 +159,16 @@ static void rct(float x,float y,float w,float h,Vec4 c){
     glDeleteBuffers(1,&ibo);glBindVertexArray(0);
 }
 
-/* Rounded rect approximation using multiple rects */
+/* Rounded rect: leaves corners empty (relies on solid bg for round look) */
 static void rrct(float x,float y,float w,float h,float r,Vec4 c){
-    if(r<1.0f||r*2>=w||r*2>=h){rct(x,y,w,h,c);return;}
-    /* Center strip (full width) */
-    rct(x,y+r,w,h-2*r,c);
-    /* Left strip (between rounded corners) */
-    rct(x,y+r,r,h-2*r,c);
-    /* Right strip */
-    rct(x+w-r,y+r,r,h-2*r,c);
-    /* Corner fill: top-left, top-right, bottom-left, bottom-right */
-    rct(x,y+r,r,r,c);rct(x+w-r,y+r,r,r,c);
-    rct(x,y+h-2*r,r,r,c);rct(x+w-r,y+h-2*r,r,r,c);
+    if(r<1.0f||r*2>w||r*2>h){rct(x,y,w,h,c);return;}
+    /* Three horizontal strips */
+    rct(x+r, y,      w-2*r, r,   c); /* top middle */
+    rct(x,   y+r,    w,     h-2*r,c); /* full middle */
+    rct(x+r, y+h-r,  w-2*r, r,   c); /* bottom middle */
+    /* Two vertical strips (corners stay empty = rounded look) */
+    rct(x,     y+r, r, h-2*r, c); /* left edge */
+    rct(x+w-r, y+r, r, h-2*r, c); /* right edge */
 }
 
 static void btn(const Button&b,float ts){
@@ -184,14 +182,15 @@ static Button mkB(float x,float y,float w,float h,const char*t,Vec4 c){
 static bool hit(float px,float py,const Rect&r){return px>=r.x&&px<=r.x+r.w&&py>=r.y&&py<=r.y+r.h;}
 static int hitB(float x,float y){for(int i=0;i<G.nb;i++)if(hit(x,y,G.btns[i].rect))return i;return -1;}
 
-/* Improved toggle switch: track + circle knob */
+/* Improved toggle switch: wide track + circle knob */
 static void toggleSwitch(float x,float y,bool on){
-    float tw=50.0f,th=26.0f,pad=3.0f,knobD=th-2*pad;
-    rrct(x,y,tw,th,th/2,on?Vec4{C_TOGGLE_TRACK_ON}:Vec4{C_TOGGLE_TRACK_OFF});
+    float tw=54.0f,th=30.0f,pad=3.0f,knobD=th-2*pad;
+    /* Track - bright when ON, light grey when OFF */
+    Vec4 tc=on?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
+    rrct(x,y,tw,th,th/2,tc);
+    /* Knob */
     float kx=on?x+tw-knobD-pad:x+pad;
-    float ky=y+pad;
-    /* Draw knob as small rect (approximates circle) */
-    rrct(kx,ky,knobD,knobD,knobD/2,Vec4{C_TOGGLE_KNOB});
+    rrct(kx+1,y+pad+1,knobD-2,knobD-2,(knobD-2)/2,Vec4{0.98f,0.98f,0.99f,1.0f});
 }
 
 static void genData(){
@@ -255,15 +254,16 @@ static void renderLogin(){
     float y=G.h*0.10f;
 
     txt((G.w-msr("Connect to IRC",30.0f))*0.5f,y,"Connect to IRC",30.0f,Vec4{C_TITLE});
-    y+=50.0f;
+    y+=44.0f;
 
     auto field=[&](const char*label,const char*val,const char*hint){
-        txt(pad,y,label,15.0f,Vec4{C_TITLE},1.08f);
-        float uy=y+22.0f;
-        rct(pad,uy,fw,1.5f,Vec4{0.22f,0.25f,0.30f,1.0f});
-        if(val&&*val)txt(pad+4.0f,y+16.0f,val,16.0f,Vec4{C_WHITE},1.05f);
-        else txt(pad+4.0f,y+16.0f,hint,16.0f,Vec4{C_HINT},1.05f);
-        y+=48.0f;
+        float fh=48.0f;
+        rrct(pad,y+18.0f,fw,fh,12.0f,Vec4{0.14f,0.14f,0.19f,1.0f});
+        rct(pad,y+18.0f+fh-2.0f,fw,2.0f,Vec4{0.22f,0.25f,0.30f,1.0f});
+        txt(pad+4.0f,y,label,14.0f,Vec4{C_TITLE},1.08f);
+        if(val&&*val)txt(pad+14.0f,y+18.0f+fh*0.5f+5.0f,val,16.0f,Vec4{C_WHITE},1.05f);
+        else txt(pad+14.0f,y+18.0f+fh*0.5f+5.0f,hint,16.0f,Vec4{C_HINT},1.05f);
+        y+=fh+28.0f;
     };
 
     field("Server hostname (e.g. irc.libera.chat)","irc.libera.chat","irc.libera.chat");
@@ -280,8 +280,9 @@ static void renderLogin(){
     toggleSwitch(pad+fw-58.0f,y,G.login.tls);
     y+=48.0f;
 
-    /* Connect button centered in remaining space */
-    y=G.h*0.58f;
+    /* Connect button */
+    y = G.h * 0.42f;
+    if (y < 630.0f) y = 630.0f; /* minimum below TLS row */
     G.btns[1].rect={pad,y,fw,46.0f};
     G.btns[1].text="Connect";
     G.btns[1].color=Vec4{C_CYAN};
