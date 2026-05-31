@@ -478,7 +478,7 @@ static void renderServerSelect(){
         y+=h+cardGap;
     }
 
-    /* === ONBOARDING CAROUSEL (compact, between cards and buttons) === */
+    /* === ONBOARDING CAROUSEL (prominent, swipeable) === */
     y+=4.0f*G.dp;
     const char*carTitles[]={"Own your conversations.","You're in control.","Secure messaging.","Messaging for your team."};
     const char*carBodies[]={
@@ -487,28 +487,33 @@ static void renderServerSelect(){
         "No phone number required. No ads, no tracking.",
         "Trusted by the world's most secure organisations."
     };
-    float carH=56.0f*G.dp;
-    rrct(pad,y,fw,carH,14.0f,Vec4{0.13f,0.13f,0.20f,1.0f});
-    /* Carousel image (small, left side) */
+    float carH=72.0f*G.dp;
+    rrct(pad,y,fw,carH,14.0f,Vec4{0.10f,0.10f,0.18f,1.0f});
+    /* Bright border to be visible */
+    rct(pad,y,fw,carH,Vec4{0.18f,0.18f,0.26f,1.0f});
+    rrct(pad+1,y+1,fw-2,carH-2,13.0f,Vec4{0.10f,0.10f,0.18f,1.0f});
+    /* Carousel image (left side) */
     if(G.texCar[page]){
-        float cis=carH*0.65f;
+        float cis=carH*0.60f;
         sprite(pad+12.0f*G.dp,y+(carH-cis)*0.5f,cis,cis,G.texCar[page]);
     }
     /* Text (right of image) */
-    float ctx=pad+carH*0.70f+20.0f*G.dp;
-    txt(ctx,y+carH*0.25f,carTitles[page],12.0f*G.dp,Vec4{C_TITLE});
-    float bw=G.w-ctx-pad-8.0f;
-    /* Simple body - no word wrap, truncate */
-    char bodyBuf[80];snprintf(bodyBuf,80,"%.52s",carBodies[page]);
-    txt(ctx,y+carH*0.65f,bodyBuf,10.0f*G.dp,Vec4{C_LABEL});
-    /* Dots centered at bottom of carousel */
-    int nPages=4;float dotR=4.0f*G.dp,dotGap=14.0f*G.dp;
+    float ctx=pad+carH*0.65f+16.0f*G.dp;
+    txt(ctx,y+carH*0.22f,carTitles[page],13.0f*G.dp,Vec4{C_CYAN});
+    char bodyBuf[80];snprintf(bodyBuf,80,"%.50s",carBodies[page]);
+    txt(ctx,y+carH*0.58f,bodyBuf,10.0f*G.dp,Vec4{C_LABEL});
+    /* Large bright dots */
+    int nPages=4;float dotR=6.0f*G.dp,dotGap=18.0f*G.dp;
     float dotW2=nPages*(dotR*2+dotGap)-dotGap;
-    float dotX2=pad+(fw-dotW2)*0.5f,dotY2=y+carH-dotR*2-6.0f*G.dp;
+    float dotX2=pad+(fw-dotW2)*0.5f,dotY2=y+carH-dotR*2-4.0f*G.dp;
     for(int i=0;i<nPages;i++){
-        rrct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dotR,
-            i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
+        Vec4 dc=i==page?Vec4{0.95f,0.35f,0.35f,1.0f}:Vec4{0.40f,0.40f,0.48f,1.0f};
+        rrct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dotR,dc);
     }
+    /* Swipe hint */
+    txt(pad+fw-msr("< swipe >",9.0f*G.dp)-8.0f,y+carH-6.0f*G.dp,"< swipe >",9.0f*G.dp,Vec4{C_HINT});
+    /* Register carousel as a button for swipe detection */
+    G.btns[10].rect={pad,y,fw,carH};G.btns[10].color=Vec4{0,0,0,0};G.btns[10].text=nullptr;
     y+=carH+4.0f*G.dp;
 
     /* === BOTTOM BUTTONS === */
@@ -1114,16 +1119,12 @@ static void td(float x,float y){
         }
         return;
     }
+    /* Carousel swipe zone: check BEFORE regular buttons (cards overlap) */
+    if(G.screen==SCR_SERVER&&hit(x,y,G.btns[10].rect)){
+        G.sid=2;G.sl=x;return;
+    }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
-    /* Carousel swipe zone on server screen (between cards and buttons) */
-    if(G.screen==SCR_SERVER){
-        /* Carousel area: roughly between y after cards and before bottom buttons */
-        float carY=G.h*0.52f,carH2=56.0f*G.dp;
-        if(x>G.w*0.05f&&x<G.w*0.95f&&y>carY&&y<carY+carH2){
-            G.sid=2;G.sl=x;return;
-        }
-    }
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
@@ -1249,7 +1250,7 @@ static void tm(float x,float y){
     if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
     else if(G.sid==2){
         float dx=x-G.sl;
-        if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0; /* reset timer */}
+        if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0;LOGI("Carousel page %d",G.login.carouselPage);}
     }
     /* Long-press: cancel if moved too much */
     if(G.sid==3&&(fabsf(x-G.sl)>30.0f||fabsf(y-G.ty)>30.0f)){G.sid=1;G.sl=y;G.sv=0;G.longPressIdx=-1;}
