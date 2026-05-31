@@ -465,10 +465,10 @@ static void renderServerSelect(){
     float chipW=fw*0.5f-5.0f;
     bool openSrc=(G.login.cat==0);
     rct(pad,y,chipW,chipH,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
-    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    txt(pad+(chipW-msr("Open source",12.0f*G.dp))*0.5f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[4].rect={pad,y,chipW,chipH};
     rct(pad+chipW+10.0f,y,chipW,chipH,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
-    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    txt(pad+chipW+10.0f+(chipW-msr("Proprietary",12.0f*G.dp))*0.5f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[5].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
 
