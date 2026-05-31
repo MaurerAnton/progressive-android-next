@@ -694,7 +694,7 @@ static void tm(float x,float y){
     if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
     else if(G.sid==2){
         float dx=x-G.sl;
-        if(fabsf(dx)>50.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;}
+        if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;}
     }
     for(int i=0;i<G.nb;i++)if(i==G.ab)G.btns[i].pressed=hit(x,y,G.btns[i].rect);
 }
