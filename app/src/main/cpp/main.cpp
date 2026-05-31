@@ -341,10 +341,10 @@ static void renderOnboard(){
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
 static void renderServerSelect(){
-    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f*G.dp,cardGap=8.0f*G.dp;
+    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=58.0f*G.dp,cardGap=6.0f*G.dp;
     float chipH=36.0f*G.dp;
     int page=G.login.carouselPage;
-    float y=G.h*0.03f;
+    float y=G.h*0.01f; /* tighter to top */
 
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
@@ -398,9 +398,9 @@ static void renderServerSelect(){
         float alpha=cards[i].dim?0.40f:1.0f;
         rrct(pad,y,fw,cardH,14.0f,Vec4{0.18f*alpha,0.18f*alpha,0.25f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+12.0f*G.dp,y+10.0f*G.dp,44.0f*G.dp,44.0f*G.dp,14.0f*G.dp,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
-        txt(pad+64.0f*G.dp,y+18.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+64.0f*G.dp,y+40.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
+        txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+60.0f*G.dp,y+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
         if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_HINT});
         G.btns[4+i].rect={pad,y,fw,cardH};
         G.btns[4+i].color=cards[i].accent;
@@ -462,10 +462,10 @@ static void renderIrcAuth(){
     float tlsH=42.0f*G.dp,btnH=48.0f*G.dp;
     float titleH=44.0f*G.dp,footerH=24.0f*G.dp;
     float cardPad=20.0f*G.dp;
-    float cardH=titleH+fieldsTotal+tlsH+cardPad*2+btnH+24.0f;
+    float cardH=titleH+fieldsTotal+tlsH+cardPad*2+btnH+16.0f*G.dp;
     /* Center card vertically */
-    float cardY=(G.h-cardH-footerH)*0.35f;
-    if(cardY<G.h*0.03f)cardY=G.h*0.03f;
+    float cardY=(G.h-cardH)*0.22f;
+    if(cardY<G.h*0.02f)cardY=G.h*0.02f;
 
     float cy=cardY+cardPad;
 
@@ -532,9 +532,9 @@ static void renderMatrixLogin(){
     float pad=G.w*0.08f,fw=G.w*0.84f;
     float fieldH=48.0f*G.dp,fieldGap=20.0f*G.dp,btnH=46.0f*G.dp;
     float cardPad=20.0f*G.dp,titleH=36.0f*G.dp;
-    float cardH=titleH+3*(fieldH+fieldGap)+cardPad*2+btnH+56.0f;
-    float cardY=(G.h-cardH-30.0f)*0.32f;
-    if(cardY<G.h*0.03f)cardY=G.h*0.03f;
+    float cardH=titleH+3*(fieldH+fieldGap)+cardPad*2+btnH+30.0f*G.dp;
+    float cardY=(G.h-cardH)*0.25f;
+    if(cardY<G.h*0.02f)cardY=G.h*0.02f;
 
     rrct(pad-8.0f,cardY,fw+16.0f,cardH,16.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
     rrct(pad-7.0f,cardY+1.0f,fw+14.0f,cardH-2.0f,15.0f,Vec4{0.17f,0.17f,0.23f,1.0f});
@@ -672,8 +672,8 @@ static void tu(float x,float y){
                 else if(i==1){LOGI("Create account");}
                 else if(i==2){G.login.cat=0;}
                 else if(i==3){G.login.cat=1;}
-                else if(i==4){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==5){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                else if(i==4&&G.login.cat==0){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==5&&G.login.cat==0){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
                 /* 6-9 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
