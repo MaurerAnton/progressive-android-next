@@ -1118,7 +1118,7 @@ static void renderChat(){
             else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
             else if(m.type==7){tpref="";tc=nc;} /* reaction */
-            else if(m.type==8){tpref="[THREAD] ";tc=Vec4{0.55f,0.50f,0.80f,1.0f};}
+            else if(m.type==8){tpref="";tc=nc;} /* edited - indicator shown separately */
             float textW=G.w-ttx-20.0f*G.dp;
             float lx=ttx,ly=by;
             if(!grouped&&m.type>0){txt(ttx,by+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);ttx+=msr(tpref,10.0f*G.dp);lx=ttx;}
@@ -1141,6 +1141,10 @@ static void renderChat(){
                 else if(strstr(word,"http"))wc=Vec4{C_CYAN};
                 else if(word[0]=='*'&&word[strlen(word)-1]=='*')wc=Vec4{0.95f,0.95f,1.0f,1.0f};
                 txt(lx,ly+lh*0.75f,word,tsz,wc,1.05f);}
+            /* Edited indicator */
+            if(m.type==8){ /* edited */
+                txt(bx+bw-msr("(edited)",9.0f*G.dp)-8.0f,ly+lh*0.2f,"(edited)",9.0f*G.dp,Vec4{C_HINT});
+            }
             /* Delivery/read checkmark for own messages */
             if(m.nick&&strcmp(m.nick,"me")==0){
                 const char*chk=m.threadCount>0?"~~":"~"; /* double check = read */
