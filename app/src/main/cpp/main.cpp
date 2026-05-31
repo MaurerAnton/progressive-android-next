@@ -91,7 +91,7 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;int carouselPage;float carouselOff;}login; /* cat: 0=open source, 1=proprietary */
+    struct{bool tls;int cat;int carouselPage;float carouselOff;int frameCount;}login;
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -424,8 +424,8 @@ static void renderServerSelect(){
     txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
     y+=is+4.0f*G.dp;
 
-    /* Page dots */
-    float dotR=3.0f*G.dp,dotGap=6.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
+    /* Page dots - larger and brighter */
+    float dotR=5.0f*G.dp,dotGap=10.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
     for(int i=0;i<4;i++)
         rrct(dotX+i*(dotR*2+dotGap),y,dotR*2,dotR*2,dotR,
             i==page?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.32f,1.0f});
@@ -800,6 +800,11 @@ Java_chat_progressive_app_next_MainActivity_nativeResize(JNIEnv*,jclass,jint w,j
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
     if(G.init){
+        /* Auto-switch carousel every ~5s (300 frames at 60fps) */
+        if(G.screen==SCR_SERVER&&++G.login.frameCount>300){
+            G.login.carouselPage=(G.login.carouselPage+1)%4;
+            G.login.frameCount=0;
+        }
         if(!G.touching&&fabsf(G.sv)>0.5f){G.sy+=G.sv;G.sv*=0.92f;}
         frame();
     }

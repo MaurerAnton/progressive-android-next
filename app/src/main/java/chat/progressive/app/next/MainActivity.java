@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
         glView = new GLSurfaceView(this);
         glView.setEGLContextClientVersion(3);
         glView.setRenderer(new R());
-        glView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         setContentView(glView);
         glView.setOnTouchListener((v, e) -> {
             float x = e.getX(), y = e.getY();
