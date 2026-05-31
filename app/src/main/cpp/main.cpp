@@ -440,6 +440,10 @@ static void renderServerSelect(){
     int page=G.login.carouselPage;
     float y=G.h*0.02f;
 
+    /* Profile avatar placeholder (top right) */
+    float avR=18.0f*G.dp,avX=G.w-avR*2-12.0f,avY=G.h*0.02f+4.0f;
+    rrct(avX,avY,avR*2,avR*2,avR,Vec4{C_PURPLE});
+    txt(avX+avR-msr("U",10.0f*G.dp)*0.5f,avY+avR+3.0f,"U",10.0f*G.dp,Vec4{C_WHITE},1.0f);
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.13f;
