@@ -1316,7 +1316,7 @@ static void tu(float x,float y){
 }
 static void tm(float x,float y){
     G.tx=x;G.ty=y;
-    if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
+    if(G.sid==1){G.sy-=y-G.sl;G.sv=-(y-G.sl);G.sl=y;}
     else if(G.sid==2){
         float dx=x-G.sl;
         if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0;LOGI("Carousel page %d",G.login.carouselPage);}
