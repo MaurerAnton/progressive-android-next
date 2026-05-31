@@ -1190,6 +1190,11 @@ static void renderChat(){
                 rrct(bx+8.0f,ly+lh+2.0f,msr(tcb,9.0f*G.dp)+16.0f,lh*0.7f,lh*0.35f,Vec4{0.12f,0.10f,0.20f,1.0f});
                 txt(bx+16.0f,ly+lh*1.5f,tcb,9.0f*G.dp,Vec4{0.55f,0.50f,0.80f,1.0f});
             }
+            /* Quote reply rendering */
+            if(m.type==6){
+                rrct(bx+4.0f,my-lh*0.1f,3.0f,lh*1.2f,1.5f,Vec4{C_CYAN});
+                my+=lh*0.3f;
+            }
         }else{
             txt(6.0f*G.dp,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         }
