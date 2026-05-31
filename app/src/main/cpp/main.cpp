@@ -969,6 +969,9 @@ static void renderChatList(){
             char tb[16];snprintf(tb,16,"%02d:%02d",r.msgs.back().h,r.msgs.back().m);
             txt(pad+fw-msr(tb,10.0f*G.dp)-4.0f,y+rowH*0.30f,tb,10.0f*G.dp,Vec4{C_TS});
         }
+        /* Activity status */
+        const char*act=i==0?"now":"earlier";
+        txt(pad+fw-msr(act,8.0f*G.dp)-4.0f,y+rowH*0.86f,act,8.0f*G.dp,Vec4{C_HINT});
         G.btns[2+i].rect={pad-4.0f,y,fw+8.0f,rowH};
         G.btns[2+i].color=Vec4{0,0,0,0};G.btns[2+i].text=nullptr;
         y+=rowH+4.0f*G.dp;
