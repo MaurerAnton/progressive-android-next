@@ -327,7 +327,7 @@ static void layoutUI(){
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
-        case SCR_PROFILE: G.nb=5; break; /* back + 4 action buttons */
+        case SCR_PROFILE: G.nb=6; break; /* back + 5 action buttons */
         case SCR_SETTINGS: G.nb=6; break; /* back + 5 toggles */
         case SCR_ROOMINFO: G.nb=5; break; /* back + 4 management buttons */
         case SCR_CHATLIST: G.nb=10; break; /* header buttons + room items */
