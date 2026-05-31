@@ -82,7 +82,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_ONBOARD,SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -258,8 +258,7 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_ONBOARD: G.nb=2; break; /* sign in + create account */
-        case SCR_SERVER: G.nb=8; break; /* 2 chips + 6 protocol cards */
+        case SCR_SERVER: G.nb=10; break; /* 2 buttons + 2 chips + 6 cards */
         case SCR_MATRIX: G.nb=3; break; /* back + sign in + create account */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_CHAT:{
@@ -611,7 +610,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_ONBOARD:renderOnboard();break;case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -625,24 +624,20 @@ static void td(float x,float y){
     }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
-    /* Carousel swipe tracking */
-    if(G.screen==SCR_ONBOARD){G.sid=1;G.sl=x;G.sv=0;return;}
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
     G.touching=false;G.sid=0;
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
-            if(G.screen==SCR_ONBOARD){
-                if(i==0){LOGI("Sign In");G.screen=SCR_SERVER;layoutUI();}
-                else if(i==1){LOGI("Create account");G.screen=SCR_SERVER;layoutUI();}
-            }
-            else if(G.screen==SCR_SERVER){
-                if(i==0){G.login.cat=0;LOGI("Open source");}
-                else if(i==1){G.login.cat=1;LOGI("Proprietary");}
-                else if(i==2){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==3){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
-                /* 4-7 are dimmed coming-soon cards, no action */
+            if(G.screen==SCR_SERVER){
+                if(i==0){LOGI("Sign In");}
+                else if(i==1){LOGI("Create account");}
+                else if(i==2){G.login.cat=0;}
+                else if(i==3){G.login.cat=1;}
+                else if(i==4){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==5){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                /* 6-9 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
@@ -662,12 +657,7 @@ static void tu(float x,float y){
 }
 static void tm(float x,float y){
     G.tx=x;G.ty=y;
-    if(G.sid==1){
-        if(G.screen==SCR_ONBOARD){
-            float dx=x-G.sl;
-            if(fabsf(dx)>60.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;}
-        }else{G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
-    }
+    if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
     for(int i=0;i<G.nb;i++)if(i==G.ab)G.btns[i].pressed=hit(x,y,G.btns[i].rect);
 }
 
@@ -732,7 +722,7 @@ static bool initGL(JNIEnv*env,jobject am){
     glViewport(0,0,G.w,G.h);
     G.dp=(float)G.w/411.0f; /* density scale: 1080px/411dp = 2.63 */
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
-    genData();G.screen=SCR_ONBOARD;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
 }
 
