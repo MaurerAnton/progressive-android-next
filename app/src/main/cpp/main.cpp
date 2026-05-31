@@ -78,7 +78,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_LOGIN,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_LOGIN,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -236,7 +236,8 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_LOGIN:G.nb=2;break; /* 0=TLS,1=Connect */
+        case SCR_SERVER: G.nb=3; break; /* 3 server option buttons */
+        case SCR_LOGIN: G.nb=2; break;
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(6,6,42,42,"#",Vec4{C_DARK});
             float dy=60.0f;
@@ -246,6 +247,47 @@ static void layoutUI(){
             G.btns[G.nb++]=mkB(G.w-60.0f,G.h-48.0f,52,40,"Send",Vec4{C_CYAN});
             break;}
     }
+}
+
+/* ====== SERVER SELECTION SCREEN ====== */
+static void renderServerSelect(){
+    float pad=G.w*0.08f,fw=G.w*0.84f,cardH=72.0f,cardGap=14.0f;
+    int nCards=3;
+    float contentH=60.0f+40.0f+20.0f+nCards*(cardH+cardGap)+cardGap+48.0f+40.0f;
+    float startY=(G.h-contentH)*0.35f;
+    if(startY<G.h*0.05f)startY=G.h*0.05f;
+    float y=startY;
+
+    /* Title */
+    txt((G.w-msr("Select a server",28.0f))*0.5f,y,"Select a server",28.0f,Vec4{C_TITLE});
+    y+=44.0f;
+
+    /* Description */
+    txt(pad+4.0f,y,"Just like email, accounts have one home,",15.0f,Vec4{C_LABEL});
+    y+=22.0f;
+    txt(pad+4.0f,y,"although you can talk to anyone.",15.0f,Vec4{C_LABEL});
+    y+=36.0f;
+
+    /* Server cards */
+    auto card=[&](const char*title,const char*desc,int idx,Vec4 accent){
+        rrct(pad,y,fw,cardH,12.0f,Vec4{0.14f,0.14f,0.20f,1.0f});
+        /* Accent left edge */
+        rct(pad,y,4.0f,cardH,accent);
+        txt(pad+16.0f,y+16.0f,title,18.0f,Vec4{C_WHITE});
+        txt(pad+16.0f,y+40.0f,desc,13.0f,Vec4{C_LABEL});
+        G.btns[idx].rect={pad,y,fw,cardH};
+        G.btns[idx].color=accent;
+        G.btns[idx].text=nullptr;
+        y+=cardH+cardGap;
+    };
+
+    card("matrix.org","Join millions for free on the largest public server",0,Vec4{C_CYAN});
+    card("Custom server","Enter your own homeserver URL",1,Vec4{C_GREEN});
+    card("IRC","Connect via IRC bridge (old-school style)",2,Vec4{C_PURPLE});
+    y+=8.0f;
+
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
+        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
 
 /* ====== LOGIN SCREEN ====== */
@@ -389,7 +431,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_LOGIN:renderLogin();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_LOGIN:renderLogin();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -409,7 +451,12 @@ static void tu(float x,float y){
     G.touching=false;G.sid=0;
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
-            if(G.screen==SCR_LOGIN){
+            if(G.screen==SCR_SERVER){
+                if(i==0){LOGI("matrix.org");G.screen=SCR_LOGIN;layoutUI();}
+                else if(i==1){LOGI("Custom");G.screen=SCR_LOGIN;layoutUI();}
+                else if(i==2){LOGI("IRC");G.screen=SCR_LOGIN;layoutUI();}
+            }
+            else if(G.screen==SCR_LOGIN){
                 if(i==0){G.login.tls=!G.login.tls;G.btns[0].color=G.login.tls?Vec4{C_TOGGLE_TRACK_ON}:Vec4{C_TOGGLE_TRACK_OFF};}
                 else if(i==1){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
             }else if(G.screen==SCR_CHAT){
@@ -460,7 +507,7 @@ static bool initGL(JNIEnv*env,jobject am){
     glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0,0,G.w,G.h);
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
-    genData();G.screen=SCR_LOGIN;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
 }
 
