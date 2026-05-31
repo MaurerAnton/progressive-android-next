@@ -1589,10 +1589,10 @@ Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
             G.login.carouselPage=(G.login.carouselPage+1)%4;
             G.login.frameCount=0;
         }
-        /* Auto-login test: login after 5s on server screen */
+        /* Auto-login test: login after 2s on server screen */
         static int autoLoginFrames=0;
         if(G.init&&autoLoginFrames==0){autoLoginFrames=1;}
-        if(G.screen==SCR_SERVER&&++autoLoginFrames>300&&autoLoginFrames<310){
+        if(G.screen==SCR_SERVER&&++autoLoginFrames>120&&autoLoginFrames<130){
             matrixLogin("@temp:progressive.chat","temproacc5");
             autoLoginFrames=1000; /* fire once */
         }
