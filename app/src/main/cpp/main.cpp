@@ -1640,6 +1640,15 @@ static bool initGL(JNIEnv*env,jobject am){
     snprintf(G.login.pass,64,"temproacc5");
     G.login.passLen=strlen(G.login.pass);
     genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    /* GPU framebuffer capture for verification */
+    frame();
+    unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+    FILE*f=fopen("/data/data/chat.progressive.app.next/gpu_screenshot.ppm","wb");
+    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+        fclose(f);LOGI("GPU screenshot saved %dx%d",G.w,G.h);}
+    free(gpx);
     LOGI("init ok");return true;
 }
 
