@@ -1120,9 +1120,19 @@ static void renderChat(){
                 continue;
             }
             const char* tpref="";Vec4 tc=nc;
-            if(m.type==1){tpref="[IMG] ";tc=Vec4{0.30f,0.65f,0.85f,1.0f};}
+            if(m.type==1){
+                /* Image card */
+                rrct(ttx,my+lh*0.1f,bw*0.5f,lh*2.5f,8.0f,Vec4{0.08f,0.08f,0.18f,1.0f});
+                txt(ttx+8.0f,my+lh*1.5f,"[IMAGE]",10.0f*G.dp,Vec4{0.30f,0.65f,0.85f,1.0f});
+                continue;
+            }
             else if(m.type==2){tpref="[FILE] ";tc=Vec4{0.85f,0.65f,0.30f,1.0f};}
-            else if(m.type==3){tpref="[AUDIO] ";tc=Vec4{0.55f,0.45f,0.85f,1.0f};}
+            else if(m.type==3){
+                /* Audio waveform placeholder */
+                rrct(ttx,my+lh*0.1f,bw*0.6f,lh*1.5f,6.0f,Vec4{0.08f,0.08f,0.18f,1.0f});
+                txt(ttx+8.0f,my+lh*1.0f,"[AUDIO]",10.0f*G.dp,Vec4{0.55f,0.45f,0.85f,1.0f});
+                continue;
+            }
             else if(m.type==4){tpref="[POLL] ";tc=Vec4{0.25f,0.70f,0.55f,1.0f};}
             /* Poll bar rendering after text */
             if(m.type==4){
