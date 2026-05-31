@@ -832,7 +832,10 @@ static void renderRoomInfo(){
     rrct((G.w-20.0f*G.dp)*0.5f,y,20.0f*G.dp,20.0f*G.dp,10.0f*G.dp,Vec4{C_GREEN});
     y+=28.0f*G.dp;
     txt((G.w-msr("Online",12.0f*G.dp))*0.5f,y,"Online",12.0f*G.dp,Vec4{C_GREEN});
-    y+=20.0f*G.dp;
+    y+=8.0f*G.dp;
+    /* Status message */
+    txt((G.w-msr("Available",11.0f*G.dp))*0.5f,y+14.0f*G.dp,"Available",11.0f*G.dp,Vec4{C_HINT});
+    y+=28.0f*G.dp;
     char nb[48];snprintf(nb,48,"Notifications: %s",G.login.notifsOn?"ON":"OFF");
     const char* acts[]={nb,"Pin room","Search messages","Invite people","Leave room"};
     for(int i=0;i<5;i++){
