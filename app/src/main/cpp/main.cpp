@@ -83,7 +83,8 @@ enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
     bool init;int w,h;
-    GLuint prog,tex,vboG,vboR,vaoG,vaoR;
+    int logoW=0,logoH=0;
+    GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo;
     GLint uMVP,uTex,uColor,uSmooth,uIsTex;
     Screen screen;
     struct{bool tls;int cat;}login; /* cat: 0=open source, 1=proprietary */
@@ -169,6 +170,22 @@ static void rrct(float x,float y,float w,float h,float r,Vec4 c){
     /* Two vertical strips (corners stay empty = rounded look) */
     rct(x,     y+r, r, h-2*r, c); /* left edge */
     rct(x+w-r, y+r, r, h-2*r, c); /* right edge */
+}
+
+/* Sprite: render a texture at (x,y) with given width/height */
+static void sprite(float x,float y,float w,float h,GLuint texture){
+    float v[]={x,y,0,0, x+w,y,1,0, x+w,y+h,1,1, x,y+h,0,1};
+    GLushort idx[]={0,1,2,0,2,3};
+    glUseProgram(G.prog);glUniform1i(G.uIsTex,1);
+    glUniform4f(G.uColor,1,1,1,1);glUniform1f(G.uSmooth,0.0f);
+    glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,texture);glUniform1i(G.uTex,0);
+    float mvp[16];ortho(mvp,0,(float)G.w,(float)G.h,0,-1,1);glUniformMatrix4fv(G.uMVP,1,GL_FALSE,mvp);
+    glBindBuffer(GL_ARRAY_BUFFER,G.vboR);glBufferData(GL_ARRAY_BUFFER,sizeof(v),v,GL_DYNAMIC_DRAW);
+    glBindVertexArray(G.vaoR);
+    GLuint ibo;glGenBuffers(1,&ibo);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(idx),idx,GL_DYNAMIC_DRAW);
+    glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,nullptr);
+    glDeleteBuffers(1,&ibo);glBindVertexArray(0);
 }
 
 static void btn(const Button&b,float ts){
@@ -259,23 +276,25 @@ static void renderServerSelect(){
     float y=G.h*0.04f;
     if(y<G.h*0.02f)y=G.h*0.02f;
 
-    /* Logo - chat bubble with chart line (element_logo_green approximation) */
-    float lx=(G.w-56.0f)*0.5f,ly=y+2.0f;
-    /* Chat bubble outline */
-    rrct(lx,ly,50.0f,30.0f,10.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
-    rrct(lx+2.0f,ly+2.0f,46.0f,26.0f,8.0f,Vec4{C_DARK});
-    /* Bubble tail */
-    rct(lx+14.0f,ly+30.0f,8.0f,10.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
-    rct(lx+16.0f,ly+32.0f,4.0f,10.0f,Vec4{C_DARK});
-    /* Chart line (diagonal through bubble) */
-    for(int s=0;s<4;s++)rct(lx+16.0f+s*8.0f,ly+28.0f-s*5.0f,6.0f,2.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
-    /* Data dots */
-    for(int d=0;d<3;d++)rrct(lx+23.0f+d*10.0f,ly+22.0f-d*5.0f,5.0f,5.0f,2.5f,Vec4{0.06f,0.73f,0.51f,1.0f});
-    y+=56.0f;
+    /* Logo icon (element_logo_green approximation) + real logotype PNG */
+    float lx=(G.w-52.0f)*0.5f;
+    /* Chat bubble icon */
+    rrct(lx,y+4.0f,46.0f,28.0f,8.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
+    rrct(lx+2.0f,y+6.0f,42.0f,24.0f,6.0f,Vec4{C_DARK});
+    rct(lx+12.0f,y+32.0f,8.0f,8.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
+    rct(lx+14.0f,y+34.0f,4.0f,8.0f,Vec4{C_DARK});
+    for(int s=0;s<3;s++)rct(lx+14.0f+s*8.0f,y+26.0f-s*4.0f,6.0f,2.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
+    y+=48.0f;
 
-    /* Logotype */
-    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
-    y+=34.0f;
+    /* Real logotype PNG from element_logotype.png */
+    if(G.texLogo&&G.logoW>0){
+        float lw=G.w*0.55f,lh=lw*((float)G.logoH/(float)G.logoW);
+        sprite((G.w-lw)*0.5f,y,lw,lh,G.texLogo);
+        y+=lh+8.0f;
+    }else{
+        txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
+        y+=34.0f;
+    }
 
     txt((G.w-msr("Choose your protocol",17.0f))*0.5f,y,"Choose your protocol",17.0f,Vec4{C_LABEL});
     y+=30.0f;
@@ -602,6 +621,29 @@ static bool initGL(JNIEnv*env,jobject am){
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
     stbi_image_free(px);
+
+    /* Load logotype texture */
+    AAsset* la=AAssetManager_open(G.amgr,"logotype.png",AASSET_MODE_BUFFER);
+    if(la){
+        const void*ld=AAsset_getBuffer(la);off_t llen=AAsset_getLength(la);
+        int lw,lh,lc;
+        stbi_set_flip_vertically_on_load(0); /* logotype is already top-down */
+        unsigned char*lpx=stbi_load_from_memory((const stbi_uc*)ld,llen,&lw,&lh,&lc,4);
+        stbi_set_flip_vertically_on_load(1); /* restore for font */
+        AAsset_close(la);
+        if(lpx){
+            glGenTextures(1,&G.texLogo);glBindTexture(GL_TEXTURE_2D,G.texLogo);
+            glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,lw,lh,0,GL_RGBA,GL_UNSIGNED_BYTE,lpx);
+            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+            stbi_image_free(lpx);
+            G.logoW=lw;G.logoH=lh;
+            LOGI("Logotype: %dx%d",lw,lh);
+        }
+    }
+
     glGenVertexArrays(1,&G.vaoG);glBindVertexArray(G.vaoG);
     glGenBuffers(1,&G.vboG);glBindBuffer(GL_ARRAY_BUFFER,G.vboG);
     glEnableVertexAttribArray(0);glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,sizeof(GlyphVertex),(void*)0);
