@@ -345,38 +345,32 @@ static void renderServerSelect(){
     float pad=G.w*0.05f,fw=G.w*0.90f,cardH=58.0f*G.dp,cardGap=6.0f*G.dp;
     float chipH=36.0f*G.dp;
     int page=G.login.carouselPage;
-
-    /* Fixed layout: each section has absolute Y boundaries to prevent overlap */
-    float y1=G.h*0.010f;                                /* logo top */
-    float y2=G.h*0.130f;                                /* title */
-    float y3=G.h*0.175f;                                /* protocol subtitle */
-    float y4=G.h*0.215f;                                /* chips */
-    float y5=y4+chipH+12.0f*G.dp;                       /* description */
-    float y6=y5+20.0f*G.dp;                             /* cards start */
-    float y7=G.h*0.770f;                                /* onboarding divider */
-    float y8=y7+16.0f*G.dp;                             /* carousel */
-    float y9=y8+G.w*0.12f+30.0f*G.dp;                   /* dots */
-    float yA=y9+30.0f*G.dp;                             /* buttons */
+    float y=G.h*0.02f;
 
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.13f;
-        sprite((G.w-is)*0.5f,y1,is,is,G.texLogo);
+        sprite((G.w-is)*0.5f,y,is,is,G.texLogo);
+        y+=is+8.0f*G.dp;
     }
-    txt((G.w-msr("Progressive Chat",20.0f*G.dp))*0.5f,y2,"Progressive Chat",20.0f*G.dp,Vec4{C_TITLE});
-    txt((G.w-msr("Choose your protocol",14.0f*G.dp))*0.5f,y3,"Choose your protocol",14.0f*G.dp,Vec4{C_LABEL});
+    txt((G.w-msr("Progressive Chat",20.0f*G.dp))*0.5f,y,"Progressive Chat",20.0f*G.dp,Vec4{C_TITLE});
+    y+=30.0f*G.dp;
+    txt((G.w-msr("Choose your protocol",14.0f*G.dp))*0.5f,y,"Choose your protocol",14.0f*G.dp,Vec4{C_LABEL});
+    y+=30.0f*G.dp;
 
     /* Category chips */
     float chipW=fw*0.5f-5.0f;
     bool openSrc=(G.login.cat==0);
-    rrct(pad,y4,chipW,chipH,chipH/2,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
-    txt(pad+chipW*0.15f,y4+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[3].rect={pad,y4,chipW,chipH};
-    rrct(pad+chipW+10.0f,y4,chipW,chipH,chipH/2,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
-    txt(pad+chipW+10.0f+chipW*0.2f,y4+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[4].rect={pad+chipW+10.0f,y4,chipW,chipH};
+    rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
+    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    G.btns[3].rect={pad,y,chipW,chipH};
+    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
+    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
+    G.btns[4].rect={pad+chipW+10.0f,y,chipW,chipH};
+    y+=chipH+16.0f*G.dp;
 
-    txt(pad+4.0f,y5,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
+    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
+    y+=24.0f*G.dp;
 
     /* Protocol cards */
     struct Card{const char*title,*desc;Vec4 accent;bool dim;};
@@ -399,56 +393,45 @@ static void renderServerSelect(){
     int nCards=6;
     Card* cards=openSrc?openCards:propCards;
     for(int i=0;i<nCards;i++){
-        float cy=y6+i*(cardH+cardGap);
         float alpha=cards[i].dim?0.55f:1.0f;
-        rrct(pad,cy,fw,cardH,14.0f,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
-        rct(pad,cy,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+12.0f*G.dp,cy+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
-        txt(pad+60.0f*G.dp,cy+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+60.0f*G.dp,cy+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-74.0f,cy+18.0f,"Soon",10.0f*G.dp,Vec4{C_LABEL});
-        G.btns[5+i].rect={pad,cy,fw,cardH};
+        rrct(pad,y,fw,cardH,14.0f,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
+        rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
+        rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
+        txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+60.0f*G.dp,y+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_LABEL});
+        G.btns[5+i].rect={pad,y,fw,cardH};
         G.btns[5+i].color=cards[i].accent;
+        y+=cardH+cardGap;
     }
 
     /* === ONBOARDING AT BOTTOM === */
-    rct(pad,y7,fw,1.0f,Vec4{C_DIVIDER});
+    y+=8.0f*G.dp;
+    rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
+    y+=10.0f*G.dp;
 
     struct{const char*title;}pages[]={
         {"Own your conversations."},{"You're in control."},
         {"Secure messaging."},{"Messaging for your team."},
     };
-
-    /* Compact carousel: image + title side by side */
     float is=G.w*0.12f;
-    if(G.texCar[page])sprite(pad+4.0f,y8,is,is,G.texCar[page]);
+    if(G.texCar[page])sprite(pad+4.0f,y,is,is,G.texCar[page]);
     float tsz=14.0f*G.dp;
-    txt(pad+is+12.0f,y8+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
+    txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
+    y+=is+4.0f*G.dp;
 
-    /* Page dots - centered below carousel */
-    float dotR=6.0f*G.dp,dotGap=10.0f*G.dp;
-    float dotW=4*(dotR*2+dotGap)-dotGap;
-    float dotX=(G.w-dotW)*0.5f;
-    for(int i=0;i<4;i++){
-        rct(dotX+i*(dotR*2+dotGap), y9, dotR*2, dotR*2,
-            i==page?Vec4{0.36f,0.77f,0.90f,1.0f}:Vec4{0.25f,0.25f,0.32f,1.0f});
-    }
+    float dotR=6.0f*G.dp,dotGap=10.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
+    for(int i=0;i<4;i++)
+        rct(dotX+i*(dotR*2+dotGap),y,dotR*2,dotR*2,i==page?Vec4{0.36f,0.77f,0.90f,1.0f}:Vec4{0.25f,0.25f,0.32f,1.0f});
+    y+=dotR*2+12.0f*G.dp;
 
-    /* Buttons */
     float btnW=fw*0.48f,btnH=36.0f*G.dp;
-    G.btns[0].rect={pad,yA,btnW,btnH};
-    G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};
-    btn(G.btns[0],12.0f*G.dp);
-    G.btns[1].rect={pad+btnW+fw*0.04f,yA,btnW,btnH};
-    G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};
-    btn(G.btns[1],12.0f*G.dp);
-    float yB=yA+btnH+6.0f*G.dp;
-    G.btns[2].rect={pad,yB,fw,btnH};
-    G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};
-    btn(G.btns[2],12.0f*G.dp);
+    G.btns[0].rect={pad,y,btnW,btnH};G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],12.0f*G.dp);
+    G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};btn(G.btns[1],12.0f*G.dp);
+    y+=btnH+6.0f*G.dp;
+    G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};btn(G.btns[2],12.0f*G.dp);
 
-    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,
-        "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
