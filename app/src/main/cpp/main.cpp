@@ -451,9 +451,9 @@ static void renderServerSelect(){
     rct(G.w*0.05f,y,G.w*0.9f,1.0f,Vec4{C_DIVIDER});
     y+=4.0f*G.dp;
     /* Profile avatar placeholder (top right) */
-    float avR=20.0f*G.dp,avX=G.w-avR*2-8.0f,avY=G.h*0.02f+avR*2+8.0f*G.dp;
-    rrct(avX,avY,avR*2,avR*2,avR,Vec4{0.50f,0.40f,0.78f,1.0f});
-    txt(avX+avR-msr("U",12.0f*G.dp)*0.5f,avY+avR+5.0f,"U",12.0f*G.dp,Vec4{C_WHITE},1.0f);
+    float avR=22.0f*G.dp,avX=G.w-avR*2-10.0f,avY=G.h*0.04f;
+    rct(avX,avY,avR*2,avR*2,Vec4{0.50f,0.40f,0.78f,1.0f});
+    txt(avX+avR-msr("U",12.0f*G.dp)*0.5f,avY+avR+4.0f,"U",12.0f*G.dp,Vec4{C_WHITE},1.0f);
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.13f;
