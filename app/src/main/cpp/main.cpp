@@ -870,7 +870,7 @@ static void renderRoomInfo(){
     char buf[64];
     snprintf(buf,64,"Members: %d",(int)r.msgs.size());
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=28.0f*G.dp;
-    snprintf(buf,64,"Messages: %d",(int)r.msgs.size());
+    snprintf(buf,64,"Messages: %d  |  Retention: forever",(int)r.msgs.size());
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});
     /* Federation indicator */
     rrct(pad+msr(buf,14.0f*G.dp)+60.0f,y-2.0f,msr("Federated",9.0f*G.dp)+12.0f,20.0f*G.dp,4.0f,Vec4{0.25f,0.55f,0.75f,1.0f});
