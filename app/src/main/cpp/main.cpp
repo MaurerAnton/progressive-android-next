@@ -565,8 +565,12 @@ static void renderServerSelect(){
     G.btns[0].rect={pad,y,btnW,btnH};G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],12.0f*G.dp);
     G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};btn(G.btns[1],12.0f*G.dp);
     y+=btnH+8.0f*G.dp;
-    G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};btn(G.btns[2],12.0f*G.dp);
-    /* Settings + search buttons at bottom-right */
+    G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{0.15f,0.65f,0.35f,1.0f};btn(G.btns[2],12.0f*G.dp);
+    /* No account needed hint */
+    y+=btnH+4.0f*G.dp;
+    txt((G.w-msr("No account needed to try",10.0f*G.dp))*0.5f,y,"No account needed to try",10.0f*G.dp,Vec4{C_HINT});
+    y+=16.0f*G.dp;
+    /* Settings gear at bottom-right */
     G.btns[3].rect={G.w-50.0f,G.h-50.0f,40.0f,40.0f};G.btns[3].text="#";G.btns[3].color=Vec4{C_DARK};btn(G.btns[3],16.0f*G.dp);
     txt(G.w-msr("Settings",10.0f*G.dp)-60.0f,G.h-50.0f+28.0f,"Settings",10.0f*G.dp,Vec4{C_HINT});
 
