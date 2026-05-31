@@ -581,8 +581,8 @@ static void renderServerSelect(){
     txt((G.w-msr("No account needed",10.0f*G.dp))*0.5f,y,"No account needed",10.0f*G.dp,Vec4{C_HINT});
     y+=16.0f*G.dp;
     /* Settings gear at bottom-right */
-    G.btns[3].rect={G.w-50.0f,G.h-50.0f,40.0f,40.0f};G.btns[3].text="#";G.btns[3].color=Vec4{C_DARK};btn(G.btns[3],16.0f*G.dp);
-    txt(G.w-msr("Settings",10.0f*G.dp)-60.0f,G.h-50.0f+28.0f,"Settings",10.0f*G.dp,Vec4{C_HINT});
+    G.btns[3].rect={G.w-50.0f,G.h-55.0f,44.0f,44.0f};G.btns[3].text="#";G.btns[3].color=Vec4{C_DARK};btn(G.btns[3],18.0f*G.dp);
+    txt(G.w-msr("Settings",10.0f*G.dp)-60.0f,G.h-55.0f+30.0f,"Settings",10.0f*G.dp,Vec4{C_HINT});
 
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
     /* Version info */
