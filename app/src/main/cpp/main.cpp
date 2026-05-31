@@ -328,7 +328,7 @@ static void layoutUI(){
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_PROFILE: G.nb=6; break; /* back + 5 action buttons */
-        case SCR_SETTINGS: G.nb=6; break; /* back + 5 toggles */
+        case SCR_SETTINGS: G.nb=7; break; /* back + 6 toggles */
         case SCR_ROOMINFO: G.nb=6; break; /* back + 5 management buttons */
         case SCR_CHATLIST: G.nb=10; break; /* header buttons + room items */
         case SCR_CHAT:{
@@ -791,6 +791,7 @@ static void renderSettings(){
     struct{const char*label;bool*val;}items[]={
         {"Notifications",&G.login.notifsOn},
         {"Dark theme",&G.login.notifsOn},
+        {"AMOLED black",&G.login.notifsOn},
         {"Read receipts",&G.login.notifsOn},
         {"Typing indicators",&G.login.notifsOn},
         {"Link previews",&G.login.notifsOn},
