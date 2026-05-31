@@ -81,7 +81,7 @@ struct Vec4{float r,g,b,a;};
 struct Rect{float x,y,w,h;};
 struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
-struct Message{const char*nick,*text;int h,m;int ci;char type;};
+struct Message{const char*nick,*text;int h,m;int ci;char type;int threadCount;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
 enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHATLIST,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
@@ -268,13 +268,14 @@ static void genData(){
         "notifications would be nice"};
     /* #welcome: 160 messages */
     Room rw;rw.name=strdup(rn[0]);rw.topic=rt[0];rw.unread=2;
-    rw.msgs.push_back({nullptr,strdup("--> alice joined #welcome"),9,5,0,0});
+    rw.msgs.push_back({nullptr,strdup("--> alice joined #welcome"),9,5,0,0,0});
+    rw.msgs.push_back({strdup("alice"),strdup("Welcome! Reply in thread to discuss"),9,6,0,0,3});
     /* Add a long message to test word wrap */
-    rw.msgs.push_back({strdup("alice"),strdup("This is a very long message that should wrap across multiple lines to demonstrate the word wrap functionality in the chat renderer properly"),9,6,0,0});
+    rw.msgs.push_back({strdup("alice"),strdup("This is a very long message that should wrap across multiple lines to demonstrate the word wrap functionality in the chat renderer properly"),9,6,0,0,0});
     /* Add reaction messages */
-    rw.msgs.push_back({strdup("bob"),strdup("+1"),9,7,0,7});
-    rw.msgs.push_back({strdup("charlie"),strdup("heart"),9,8,0,7});
-    rw.msgs.push_back({strdup("alice"),strdup("laugh"),9,9,0,7});
+    rw.msgs.push_back({strdup("bob"),strdup("+1"),9,7,0,7,0});
+    rw.msgs.push_back({strdup("charlie"),strdup("heart"),9,8,0,7,0});
+    rw.msgs.push_back({strdup("alice"),strdup("laugh"),9,9,0,7,0});
     for(int i=0;i<159;i++){
         int ni=i%10;int ti=i%(sizeof(texts)/sizeof(texts[0]));
         char tp=0;const char*txt=texts[ti];
@@ -286,15 +287,15 @@ static void genData(){
         else if(i%53==0){tp=6;txt=typemsgs[5+i%4];}
         int h=9+(i/15);int m=(i*3)%60;
         unsigned ch=0;for(const char*p=nicks[ni];*p;p++)ch=ch*31+*p;
-        rw.msgs.push_back({strdup(nicks[ni]),strdup(txt),h,m,(int)(ch%16),tp});
+        rw.msgs.push_back({strdup(nicks[ni]),strdup(txt),h,m,(int)(ch%16),tp,0});
     }
     G.rooms.push_back(rw);
     /* Other rooms: simple */
     Room rg;rg.name=strdup(rn[1]);rg.topic=rt[1];rg.unread=0;
-    rg.msgs.push_back({nullptr,strdup("--> dave joined #general"),10,14,0,0});
-    rg.msgs.push_back({strdup("dave"),strdup("anyone here?"),10,15,3,0});
-    rg.msgs.push_back({strdup("eve"),strdup("yep, just lurking"),10,16,4,0});
-    rg.msgs.push_back({nullptr,strdup("<-- frank left #general"),10,18,0,0});
+    rg.msgs.push_back({nullptr,strdup("--> dave joined #general"),10,14,0,0,0});
+    rg.msgs.push_back({strdup("dave"),strdup("anyone here?"),10,15,3,0,0});
+    rg.msgs.push_back({strdup("eve"),strdup("yep, just lurking"),10,16,4,0,0});
+    rg.msgs.push_back({nullptr,strdup("<-- frank left #general"),10,18,0,0,0});
     G.rooms.push_back(rg);
     Room rr;rr.name=strdup(rn[2]);rr.topic=rt[2];rr.unread=2;
     rr.msgs.push_back({strdup("frank"),strdup("lol check this out"),11,20,5,0});
@@ -1080,9 +1081,15 @@ static void renderChat(){
             else if(m.type==2){tpref="[FILE] ";tc=Vec4{0.85f,0.65f,0.30f,1.0f};}
             else if(m.type==3){tpref="[AUDIO] ";tc=Vec4{0.55f,0.45f,0.85f,1.0f};}
             else if(m.type==4){tpref="[POLL] ";tc=Vec4{0.25f,0.70f,0.55f,1.0f};}
+            /* Poll bar rendering after text */
+            if(m.type==4){
+                rrct(ttx,my+lh*1.1f,bw*0.65f,lh*0.5f,lh*0.25f,Vec4{0.15f,0.55f,0.35f,0.5f});
+                txt(ttx+4.0f,my+lh*1.4f,"67%",9.0f*G.dp,Vec4{C_WHITE});
+            }
             else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
             else if(m.type==7){tpref="";tc=nc;} /* reaction */
+            else if(m.type==8){tpref="[THREAD] ";tc=Vec4{0.55f,0.50f,0.80f,1.0f};}
             float textW=G.w-ttx-20.0f*G.dp;
             float lx=ttx,ly=by;
             if(!grouped&&m.type>0){txt(ttx,by+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);ttx+=msr(tpref,10.0f*G.dp);lx=ttx;}
@@ -1100,6 +1107,12 @@ static void renderChat(){
             /* Delivery checkmark for own messages */
             if(m.nick&&strcmp(m.nick,"me")==0){
                 txt(lx+msr(word,tsz)+4.0f,ly+lh*0.75f,"~",10.0f*G.dp,Vec4{C_LABEL});
+            }
+            /* Thread reply count */
+            if(m.threadCount>0){
+                char tcb[16];snprintf(tcb,16,"%d replies",m.threadCount);
+                rrct(bx+8.0f,ly+lh+2.0f,msr(tcb,9.0f*G.dp)+16.0f,lh*0.7f,lh*0.35f,Vec4{0.12f,0.10f,0.20f,1.0f});
+                txt(bx+16.0f,ly+lh*1.5f,tcb,9.0f*G.dp,Vec4{0.55f,0.50f,0.80f,1.0f});
             }
         }else{
             txt(6.0f*G.dp,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
