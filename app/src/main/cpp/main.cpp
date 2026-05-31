@@ -860,7 +860,7 @@ static void renderChatList(){
     float rowH=56.0f*G.dp;
     for(size_t i=0;i<G.rooms.size();i++){
         Room&r=G.rooms[i];
-        float alpha=i<2?1.0f:0.7f; /* first 2 rooms active */
+        float alpha=i<2?1.0f:0.85f;
         rct(pad-4.0f,y,fw+8.0f,rowH,Vec4{0.14f*alpha,0.14f*alpha,0.20f*alpha,1.0f});
         /* Avatar */
         float ar=rowH*0.55f;
@@ -868,11 +868,14 @@ static void renderChatList(){
         char init[2]={r.name[0],0};
         txt(pad+4.0f+ar*0.25f,y+rowH*0.62f,init,ar*0.45f,Vec4{C_WHITE},1.0f);
         /* Name + preview */
-        txt(pad+ar+16.0f,y+rowH*0.32f,r.name,14.0f*G.dp,Vec4{C_WHITE});
+        txt(pad+ar+16.0f,y+rowH*0.30f,r.name,14.0f*G.dp,Vec4{C_WHITE});
         char prev[128];
         const char*lastMsg=r.msgs.empty()?"":r.msgs.back().text;
-        snprintf(prev,128,"%.50s",lastMsg);
-        txt(pad+ar+16.0f,y+rowH*0.72f,prev,11.0f*G.dp,Vec4{C_LABEL});
+        snprintf(prev,128,"%.45s",lastMsg);
+        txt(pad+ar+16.0f,y+rowH*0.58f,prev,11.0f*G.dp,Vec4{C_LABEL});
+        /* Member count */
+        char mcnt[16];snprintf(mcnt,16,"%d",(int)r.msgs.size());
+        txt(pad+ar+16.0f,y+rowH*0.86f,mcnt,9.0f*G.dp,Vec4{C_HINT});
         /* Unread badge */
         if(r.unread>0){
             char ub[8];snprintf(ub,8,"%d",r.unread);
@@ -883,11 +886,15 @@ static void renderChatList(){
         /* Time */
         if(!r.msgs.empty()){
             char tb[16];snprintf(tb,16,"%02d:%02d",r.msgs.back().h,r.msgs.back().m);
-            txt(pad+fw-msr(tb,10.0f*G.dp)-4.0f,y+rowH*0.72f,tb,10.0f*G.dp,Vec4{C_TS});
+            txt(pad+fw-msr(tb,10.0f*G.dp)-4.0f,y+rowH*0.30f,tb,10.0f*G.dp,Vec4{C_TS});
         }
         G.btns[2+i].rect={pad-4.0f,y,fw+8.0f,rowH};
         G.btns[2+i].color=Vec4{0,0,0,0};G.btns[2+i].text=nullptr;
         y+=rowH+4.0f*G.dp;
+    }
+    /* Sync indicator */
+    if(G.mtxState==MTX_CONNECTING){
+        txt(pad+(fw-msr("Syncing...",11.0f*G.dp))*0.5f,y+14.0f*G.dp,"Syncing...",11.0f*G.dp,Vec4{C_CYAN});
     }
     /* Profile button at bottom */
     float btnH=36.0f*G.dp;
