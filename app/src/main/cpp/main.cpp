@@ -440,9 +440,9 @@ static void renderServerSelect(){
     int page=G.login.carouselPage;
     float y=G.h*0.02f;
 
-    /* What's new banner */
+    /* Version + backup banner */
     rrct(G.w*0.1f,y,G.w*0.8f,24.0f*G.dp,8.0f,Vec4{0.10f,0.15f,0.25f,1.0f});
-    txt((G.w-msr("What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp))*0.5f,y+15.0f*G.dp,"What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp,Vec4{C_CYAN});
+    txt((G.w-msr("v0.5.5: Matrix backend, reactions, threads, E2E",11.0f*G.dp))*0.5f,y+15.0f*G.dp,"v0.5.5: Matrix backend, reactions, threads, E2E",11.0f*G.dp,Vec4{C_CYAN});
     y+=28.0f*G.dp;
 
     /* Privacy notice */
