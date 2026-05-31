@@ -501,10 +501,10 @@ static void renderServerSelect(){
     /* Simple body - no word wrap, truncate */
     char bodyBuf[80];snprintf(bodyBuf,80,"%.52s",carBodies[page]);
     txt(ctx,y+carH*0.65f,bodyBuf,10.0f*G.dp,Vec4{C_LABEL});
-    /* Dots at bottom of carousel */
-    int nPages=4;float dotR=3.0f*G.dp,dotGap=10.0f*G.dp;
+    /* Dots centered at bottom of carousel */
+    int nPages=4;float dotR=4.0f*G.dp,dotGap=14.0f*G.dp;
     float dotW2=nPages*(dotR*2+dotGap)-dotGap;
-    float dotX2=pad+fw-dotW2-8.0f*G.dp,dotY2=y+carH-dotR*2-4.0f*G.dp;
+    float dotX2=pad+(fw-dotW2)*0.5f,dotY2=y+carH-dotR*2-6.0f*G.dp;
     for(int i=0;i<nPages;i++){
         rrct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dotR,
             i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
@@ -1116,6 +1116,14 @@ static void td(float x,float y){
     }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
+    /* Carousel swipe zone on server screen (between cards and buttons) */
+    if(G.screen==SCR_SERVER){
+        /* Carousel area: roughly between y after cards and before bottom buttons */
+        float carY=G.h*0.52f,carH2=56.0f*G.dp;
+        if(x>G.w*0.05f&&x<G.w*0.95f&&y>carY&&y<carY+carH2){
+            G.sid=2;G.sl=x;return;
+        }
+    }
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
@@ -1241,7 +1249,7 @@ static void tm(float x,float y){
     if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
     else if(G.sid==2){
         float dx=x-G.sl;
-        if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0;}
+        if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0; /* reset timer */}
     }
     /* Long-press: cancel if moved too much */
     if(G.sid==3&&(fabsf(x-G.sl)>30.0f||fabsf(y-G.ty)>30.0f)){G.sid=1;G.sl=y;G.sv=0;G.longPressIdx=-1;}
