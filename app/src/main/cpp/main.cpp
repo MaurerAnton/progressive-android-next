@@ -36,10 +36,14 @@ uniform sampler2D uTex;
 uniform vec4 uColor;
 uniform float uSmooth;
 uniform bool uIsTex;
+uniform bool uIsRGBA;
 out vec4 fragColor;
 void main(){
-if(uIsTex){float d=texture(uTex,vTexCoord).r;float a=smoothstep(0.5-uSmooth,0.5+uSmooth,d);fragColor=vec4(uColor.rgb,uColor.a*a);}
-else{fragColor=uColor;}
+if(!uIsTex){fragColor=uColor;return;}
+if(uIsRGBA){fragColor=texture(uTex,vTexCoord)*uColor;return;}
+float d=texture(uTex,vTexCoord).r;
+float a=smoothstep(0.5-uSmooth,0.5+uSmooth,d);
+fragColor=vec4(uColor.rgb,uColor.a*a);
 }
 )glsl";
 
@@ -85,7 +89,7 @@ static struct{
     bool init;int w,h;
     int logoW=0,logoH=0;
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo;
-    GLint uMVP,uTex,uColor,uSmooth,uIsTex;
+    GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
     struct{bool tls;int cat;}login; /* cat: 0=open source, 1=proprietary */
     int activeRoom;float sy,sv,ms;
@@ -134,7 +138,7 @@ static void txt(float x,float y,const char*t,float s,Vec4 c,float sp=1.15f){
         int ii=i*6,b=vi;idx[ii+0]=b;idx[ii+1]=b+1;idx[ii+2]=b+2;idx[ii+3]=b;idx[ii+4]=b+2;idx[ii+5]=b+3;
         cx+=g.advance*s*sp;
     }
-    glUseProgram(G.prog);glUniform1i(G.uIsTex,1);
+    glUseProgram(G.prog);glUniform1i(G.uIsTex,1);glUniform1i(G.uIsRGBA,0);
     glUniform4f(G.uColor,c.r,c.g,c.b,c.a);glUniform1f(G.uSmooth,0.08f);
     glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,G.tex);glUniform1i(G.uTex,0);
     float mvp[16];ortho(mvp,0,(float)G.w,(float)G.h,0,-1,1);glUniformMatrix4fv(G.uMVP,1,GL_FALSE,mvp);
@@ -150,7 +154,7 @@ static void txt(float x,float y,const char*t,float s,Vec4 c,float sp=1.15f){
 static void rct(float x,float y,float w,float h,Vec4 c){
     float v[]={x,y,0,0,x+w,y,1,0,x+w,y+h,1,1,x,y+h,0,1};
     GLushort idx[]={0,1,2,0,2,3};
-    glUseProgram(G.prog);glUniform1i(G.uIsTex,0);glUniform4f(G.uColor,c.r,c.g,c.b,c.a);
+    glUseProgram(G.prog);glUniform1i(G.uIsTex,0);glUniform1i(G.uIsRGBA,0);glUniform4f(G.uColor,c.r,c.g,c.b,c.a);
     float mvp[16];ortho(mvp,0,(float)G.w,(float)G.h,0,-1,1);glUniformMatrix4fv(G.uMVP,1,GL_FALSE,mvp);
     glBindBuffer(GL_ARRAY_BUFFER,G.vboR);glBufferData(GL_ARRAY_BUFFER,sizeof(v),v,GL_DYNAMIC_DRAW);
     glBindVertexArray(G.vaoR);
@@ -177,6 +181,7 @@ static void sprite(float x,float y,float w,float h,GLuint texture){
     float v[]={x,y,0,0, x+w,y,1,0, x+w,y+h,1,1, x,y+h,0,1};
     GLushort idx[]={0,1,2,0,2,3};
     glUseProgram(G.prog);glUniform1i(G.uIsTex,1);
+    glUniform1i(G.uIsRGBA,1);
     glUniform4f(G.uColor,1,1,1,1);glUniform1f(G.uSmooth,0.0f);
     glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,texture);glUniform1i(G.uTex,0);
     float mvp[16];ortho(mvp,0,(float)G.w,(float)G.h,0,-1,1);glUniformMatrix4fv(G.uMVP,1,GL_FALSE,mvp);
@@ -276,25 +281,15 @@ static void renderServerSelect(){
     float y=G.h*0.04f;
     if(y<G.h*0.02f)y=G.h*0.02f;
 
-    /* Logo icon (element_logo_green approximation) + real logotype PNG */
-    float lx=(G.w-52.0f)*0.5f;
-    /* Chat bubble icon */
-    rrct(lx,y+4.0f,46.0f,28.0f,8.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
-    rrct(lx+2.0f,y+6.0f,42.0f,24.0f,6.0f,Vec4{C_DARK});
-    rct(lx+12.0f,y+32.0f,8.0f,8.0f,Vec4{0.05f,0.60f,0.40f,1.0f});
-    rct(lx+14.0f,y+34.0f,4.0f,8.0f,Vec4{C_DARK});
-    for(int s=0;s<3;s++)rct(lx+14.0f+s*8.0f,y+26.0f-s*4.0f,6.0f,2.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
-    y+=48.0f;
-
-    /* Real logotype PNG from element_logotype.png */
+    /* Real launcher icon + logotype text */
     if(G.texLogo&&G.logoW>0){
-        float lw=G.w*0.55f,lh=lw*((float)G.logoH/(float)G.logoW);
-        sprite((G.w-lw)*0.5f,y,lw,lh,G.texLogo);
-        y+=lh+8.0f;
-    }else{
-        txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{0.06f,0.73f,0.51f,1.0f});
-        y+=34.0f;
+        float is=G.w*0.20f; /* icon size */
+        sprite((G.w-is)*0.5f,y,is,is,G.texLogo);
+        y+=is+8.0f;
     }
+    /* Logotype as text */
+    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{C_TITLE});
+    y+=34.0f;
 
     txt((G.w-msr("Choose your protocol",17.0f))*0.5f,y,"Choose your protocol",17.0f,Vec4{C_LABEL});
     y+=30.0f;
@@ -608,6 +603,7 @@ static bool initGL(JNIEnv*env,jobject am){
     G.uColor=glGetUniformLocation(G.prog,"uColor");
     G.uSmooth=glGetUniformLocation(G.prog,"uSmooth");
     G.uIsTex=glGetUniformLocation(G.prog,"uIsTex");
+    G.uIsRGBA=glGetUniformLocation(G.prog,"uIsRGBA");
     AAsset*a=AAssetManager_open(G.amgr,"noto_sans_sdf.png",AASSET_MODE_BUFFER);
     if(!a)return false;
     const void*d=AAsset_getBuffer(a);off_t len=AAsset_getLength(a);
@@ -622,8 +618,8 @@ static bool initGL(JNIEnv*env,jobject am){
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
     stbi_image_free(px);
 
-    /* Load logotype texture */
-    AAsset* la=AAssetManager_open(G.amgr,"logotype.png",AASSET_MODE_BUFFER);
+    /* Load launcher icon */
+    AAsset* la=AAssetManager_open(G.amgr,"ic_launcher.png",AASSET_MODE_BUFFER);
     if(la){
         const void*ld=AAsset_getBuffer(la);off_t llen=AAsset_getLength(la);
         int lw,lh,lc;
@@ -640,7 +636,7 @@ static bool initGL(JNIEnv*env,jobject am){
             glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
             stbi_image_free(lpx);
             G.logoW=lw;G.logoH=lh;
-            LOGI("Logotype: %dx%d",lw,lh);
+            LOGI("Launcher icon: %dx%d",lw,lh);
         }
     }
 
