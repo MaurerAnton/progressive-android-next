@@ -350,12 +350,14 @@ static void layoutUI(){
 static void renderOnboard(){
     int page=G.login.carouselPage;
     struct{const char*title;const char*body;}pages[]={
-        {"Own your conversations.","Secure and independent communication, same privacy as a face-to-face conversation in your own home."},
-        {"You're in control.","Choose where your conversations are kept. Connected via Matrix, giving you full control and independence."},
-        {"Secure messaging.","End-to-end encrypted, no phone number required. No ads, no data mining, no tracking."},
-        {"Messaging for your team.","Great for the workplace too. Trusted by the world's most secure organisations."},
+        {"Own your conversations.","Secure and independent communication."},
+        {"You're in control.","Choose where your conversations are kept."},
+        {"Secure messaging.","End-to-end encrypted, no phone number required."},
+        {"For your team.","Trusted by the world's most secure organisations."},
+        {"Open source.","Free and open. Anyone can inspect the code."},
+        {"Decentralized.","No single point of failure. Your data, your rules."},
     };
-    int nPages=4;
+    int nPages=6;
 
     /* Carousel image per page */
     if(G.texCar[page]){
