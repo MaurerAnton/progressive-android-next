@@ -848,6 +848,9 @@ static void renderRoomInfo(){
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=28.0f*G.dp;
     snprintf(buf,64,"Messages: %d",(int)r.msgs.size());
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});
+    /* Federation indicator */
+    rrct(pad+msr(buf,14.0f*G.dp)+60.0f,y-2.0f,msr("Federated",9.0f*G.dp)+12.0f,20.0f*G.dp,4.0f,Vec4{0.25f,0.55f,0.75f,1.0f});
+    txt(pad+msr(buf,14.0f*G.dp)+66.0f,y+12.0f*G.dp,"Federated",9.0f*G.dp,Vec4{C_WHITE});
     /* Admin badge */
     rrct(pad+msr(buf,14.0f*G.dp)+12.0f,y-2.0f,msr("Admin",9.0f*G.dp)+12.0f,20.0f*G.dp,4.0f,Vec4{0.85f,0.45f,0.25f,1.0f});
     txt(pad+msr(buf,14.0f*G.dp)+18.0f,y+12.0f*G.dp,"Admin",9.0f*G.dp,Vec4{C_WHITE});
