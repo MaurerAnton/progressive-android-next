@@ -319,6 +319,7 @@ static void layoutUI(){
             G.btns[G.nb++]=mkB(8,78,50,40,"<",Vec4{C_DARK}); /* back - below status bar */
             G.btns[G.nb++]=mkB(62,78,50,40,"#",Vec4{C_DARK}); /* drawer toggle */
             G.btns[G.nb++]=mkB(G.w-58,78,50,40,"Q",Vec4{C_DARK}); /* search */
+            G.btns[G.nb++]=mkB(G.w-116,78,50,40,"v",Vec4{C_DARK}); /* scroll down */
             float dy=60.0f;
             for(size_t i=0;i<G.rooms.size();i++){
                 G.btns[G.nb++]=mkB(0,dy,G.dw,44,G.rooms[i].name,
@@ -906,9 +907,15 @@ static void renderChat(){
     btn(G.btns[0],14.0f*G.dp); /* < back */
     btn(G.btns[1],14.0f*G.dp); /* # drawer */
     btn(G.btns[2],14.0f*G.dp); /* Q search */
+    btn(G.btns[3],14.0f*G.dp); /* v scroll down */
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
     if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
+
+    /* Message count + scroll indicator */
+    char mcBuf[64];
+    snprintf(mcBuf,64,"%d msgs | scroll: %d/%d",(int)r.msgs.size(),(int)G.sy,(int)G.ms);
+    txt(120.0f,hdrH+4.0f+10.0f*G.dp,mcBuf,9.0f*G.dp,Vec4{C_HINT});
 
     /* Search overlay */
     if(G.login.searchMode){
@@ -1270,6 +1277,7 @@ static void tu(float x,float y){
                 if(i==0){LOGI("Back");G.login.searchMode=false;G.ctxMenu=false;G.login.replyTo=-1;G.screen=SCR_CHATLIST;layoutUI();}
                 else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
                 else if(i==2){G.login.searchMode=!G.login.searchMode;if(G.login.searchMode){G.login.searchQLen=0;G.login.focusField=5;}}
+                else if(i==3){G.sy=G.ms;} /* scroll to bottom */
                 else if(i==G.nb-1){ /* Send button */
                     if(G.login.chatInputLen>0){
                         Room&r=G.rooms[G.activeRoom];
