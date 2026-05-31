@@ -1201,6 +1201,12 @@ static void renderChat(){
     }
     glDisable(GL_SCISSOR_TEST);
 
+    /* Empty state */
+    if(r.msgs.empty()){
+        txt((G.w-msr("No messages yet",16.0f*G.dp))*0.5f,msgTop+area*0.35f,"No messages yet",16.0f*G.dp,Vec4{C_LABEL});
+        txt((G.w-msr("Be the first to say hello!",12.0f*G.dp))*0.5f,msgTop+area*0.35f+24.0f*G.dp,"Be the first to say hello!",12.0f*G.dp,Vec4{C_HINT});
+    }
+
     /* Reply quote bar with message preview */
     if(G.login.replyTo>=0&&G.login.replyTo<(int)r.msgs.size()){
         auto&rm=r.msgs[G.login.replyTo];
