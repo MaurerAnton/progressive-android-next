@@ -1139,6 +1139,9 @@ static void td(float x,float y){
     }
     /* Message tap in chat: find message index for long-press or profile tap */
     if(G.screen==SCR_CHAT&&x>20.0f*G.dp&&x<G.w-80.0f){
+        /* Check buttons first — VVV, Q, header buttons */
+        int hh=hitB(x,y);
+        if(hh>=0&&hh<=4){G.btns[hh].pressed=true;G.ab=hh;return;}
         float hdrH=84.0f*G.dp;
         if(y<hdrH){G.screen=SCR_ROOMINFO;layoutUI();return;}
         float msgTop=hdrH+4.0f;
