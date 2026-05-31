@@ -258,7 +258,7 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_SERVER: G.nb=10; break; /* 2 buttons + 2 chips + 6 cards */
+        case SCR_SERVER: G.nb=11; break; /* 3 buttons + 2 chips + 6 cards */
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
@@ -365,11 +365,11 @@ static void renderServerSelect(){
     bool openSrc=(G.login.cat==0);
     rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[2].rect={pad,y,chipW,chipH};
+    G.btns[3].rect={pad,y,chipW,chipH};
 
     rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[3].rect={pad+chipW+10.0f,y,chipW,chipH};
+    G.btns[4].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
 
     txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
@@ -403,8 +403,8 @@ static void renderServerSelect(){
         txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
         txt(pad+60.0f*G.dp,y+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
         if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_HINT});
-        G.btns[4+i].rect={pad,y,fw,cardH};
-        G.btns[4+i].color=cards[i].accent;
+        G.btns[5+i].rect={pad,y,fw,cardH};
+        G.btns[5+i].color=cards[i].accent;
         y+=cardH+cardGap;
     }
 
@@ -443,6 +443,10 @@ static void renderServerSelect(){
     G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};
     G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};
     btn(G.btns[1],12.0f*G.dp);
+    y+=btnH+6.0f*G.dp;
+    G.btns[2].rect={pad,y,fw,btnH};
+    G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};
+    btn(G.btns[2],12.0f*G.dp);
 
     txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,
         "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
@@ -749,11 +753,12 @@ static void tu(float x,float y){
             if(G.screen==SCR_SERVER){
                 if(i==0){LOGI("Sign In");}
                 else if(i==1){LOGI("Create account");}
-                else if(i==2){G.login.cat=0;}
-                else if(i==3){G.login.cat=1;}
-                else if(i==4&&G.login.cat==0){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==5&&G.login.cat==0){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
-                /* 6-9 are dimmed coming-soon cards, no action */
+                else if(i==2){LOGI("Test");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==3){G.login.cat=0;}
+                else if(i==4){G.login.cat=1;}
+                else if(i==5&&G.login.cat==0){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==6&&G.login.cat==0){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                /* 7-10 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;G.login.focusField=0;layoutUI();}
