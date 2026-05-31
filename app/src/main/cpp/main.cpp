@@ -1139,7 +1139,15 @@ static void renderChat(){
                 rrct(ttx,my+lh*1.1f,bw*0.65f,lh*0.5f,lh*0.25f,Vec4{0.15f,0.55f,0.35f,0.5f});
                 txt(ttx+4.0f,my+lh*1.4f,"67%",9.0f*G.dp,Vec4{C_WHITE});
             }
-            else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
+            else if(m.type==5){
+                /* Location card */
+                rrct(ttx,my+lh*0.1f,bw*0.7f,lh*3.0f,8.0f,Vec4{0.08f,0.08f,0.18f,1.0f});
+                rct(ttx,my+lh*2.0f,bw*0.7f,1.0f,Vec4{C_HINT});
+                txt(ttx+8.0f,my+lh*0.9f,"Location",11.0f*G.dp,Vec4{C_CYAN});
+                txt(ttx+8.0f,my+lh*1.7f,m.text,11.0f*G.dp,Vec4{C_WHITE});
+                txt(ttx+8.0f,my+lh*2.7f,"Open in maps >",10.0f*G.dp,Vec4{C_CYAN});
+                continue;
+            }
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
             else if(m.type==7){tpref="";tc=nc;} /* reaction */
             else if(m.type==8){tpref="";tc=nc;} /* edited - indicator shown separately */
