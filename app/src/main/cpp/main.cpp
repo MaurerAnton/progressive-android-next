@@ -476,7 +476,8 @@ static void renderServerSelect(){
     G.btns[5].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
 
-    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free. Your data, your rules.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
+    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
+    txt(pad+fw-msr("Search protocols...",10.0f*G.dp)-4.0f,y,"Search protocols...",10.0f*G.dp,Vec4{C_HINT});
     y+=24.0f*G.dp;
 
     /* Protocol cards */
