@@ -184,13 +184,13 @@ static int hitB(float x,float y){for(int i=0;i<G.nb;i++)if(hit(x,y,G.btns[i].rec
 
 /* Improved toggle switch: wide track + circle knob */
 static void toggleSwitch(float x,float y,bool on){
-    float tw=54.0f,th=30.0f,pad=3.0f,knobD=th-2*pad;
-    /* Track - bright when ON, light grey when OFF */
-    Vec4 tc=on?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
+    float tw=60.0f,th=32.0f,pad=4.0f,knobD=th-2*pad;
+    /* Track - bright green ON, bright grey OFF */
+    Vec4 tc=on?Vec4{0.15f,0.75f,0.40f,1.0f}:Vec4{0.45f,0.45f,0.50f,1.0f};
     rrct(x,y,tw,th,th/2,tc);
-    /* Knob */
+    /* Knob - white circle */
     float kx=on?x+tw-knobD-pad:x+pad;
-    rrct(kx+1,y+pad+1,knobD-2,knobD-2,(knobD-2)/2,Vec4{0.98f,0.98f,0.99f,1.0f});
+    rrct(kx,y+pad,knobD,knobD,knobD/2,Vec4{1.0f,1.0f,1.0f,1.0f});
 }
 
 static void genData(){
@@ -250,47 +250,70 @@ static void layoutUI(){
 
 /* ====== LOGIN SCREEN ====== */
 static void renderLogin(){
-    float pad=G.w*0.10f,fw=G.w*0.80f;
-    float y=G.h*0.10f;
+    float pad=G.w*0.08f,fw=G.w*0.84f;
+    float fieldH=48.0f,fieldGap=24.0f;
+    int nFields=4;
+    float fieldsTotal=nFields*(fieldH+fieldGap);
+    float tlsH=42.0f,btnH=48.0f;
+    float titleH=44.0f,footerH=24.0f;
+    float cardPad=20.0f;
+    float cardH=titleH+fieldsTotal+tlsH+cardPad*2+btnH+24.0f;
+    /* Center card vertically */
+    float cardY=(G.h-cardH-footerH)*0.35f;
+    if(cardY<G.h*0.03f)cardY=G.h*0.03f;
 
-    txt((G.w-msr("Connect to IRC",30.0f))*0.5f,y,"Connect to IRC",30.0f,Vec4{C_TITLE});
-    y+=44.0f;
+    float cy=cardY+cardPad;
 
+    /* Card background - clearly distinct from page bg */
+    rrct(pad-8.0f,cardY,fw+16.0f,cardH,16.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+    /* Card subtle border */
+    rrct(pad-8.0f+1.0f,cardY+1.0f,fw+16.0f-2.0f,cardH-2.0f,15.0f,Vec4{0.17f,0.17f,0.23f,1.0f});
+
+    /* Title inside card */
+    txt(pad+fw*0.04f,cy+10.0f,"Connect to IRC",26.0f,Vec4{C_TITLE});
+    cy+=titleH+8.0f;
+
+    /* Divider */
+    rct(pad,cy,fw,1.0f,Vec4{C_DIVIDER});
+    cy+=16.0f;
+
+    /* Fields */
     auto field=[&](const char*label,const char*val,const char*hint){
-        float fh=48.0f;
-        rrct(pad,y+18.0f,fw,fh,12.0f,Vec4{0.14f,0.14f,0.19f,1.0f});
-        rct(pad,y+18.0f+fh-2.0f,fw,2.0f,Vec4{0.22f,0.25f,0.30f,1.0f});
-        txt(pad+4.0f,y,label,14.0f,Vec4{C_TITLE},1.08f);
-        if(val&&*val)txt(pad+14.0f,y+18.0f+fh*0.5f+5.0f,val,16.0f,Vec4{C_WHITE},1.05f);
-        else txt(pad+14.0f,y+18.0f+fh*0.5f+5.0f,hint,16.0f,Vec4{C_HINT},1.05f);
-        y+=fh+28.0f;
+        txt(pad+4.0f,cy,label,13.0f,Vec4{C_TITLE},1.05f);
+        rrct(pad,cy+16.0f,fw,fieldH,10.0f,Vec4{0.15f,0.15f,0.20f,1.0f});
+        if(val&&*val)txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,val,16.0f,Vec4{C_WHITE},1.03f);
+        else txt(pad+12.0f,cy+16.0f+fieldH*0.5f+5.0f,hint,16.0f,Vec4{C_HINT},1.03f);
+        cy+=fieldH+fieldGap;
     };
 
-    field("Server hostname (e.g. irc.libera.chat)","irc.libera.chat","irc.libera.chat");
+    field("Server","irc.libera.chat","irc.libera.chat");
     field("Port","6667","6667");
-    field("Nickname","progressive_user","");
-    field("Server password (optional)","","********");
+    field("Nickname","progressive_user","your nickname");
+    field("Password","","********");
 
-    y+=8.0f;
-    /* TLS row */
-    rct(pad,y-4.0f,fw,36.0f,Vec4{C_DARK});
-    txt(pad+8.0f,y+4.0f,"Use TLS/SSL",17.0f,Vec4{C_WHITE});
-    G.btns[0].rect={pad+fw-66.0f,y-2.0f,60.0f,30.0f};
-    G.btns[0].color=G.login.tls?Vec4{C_TOGGLE_TRACK_ON}:Vec4{C_TOGGLE_TRACK_OFF};
-    toggleSwitch(pad+fw-58.0f,y,G.login.tls);
-    y+=48.0f;
+    /* TLS row inside card - bright, undeniable */
+    cy+=4.0f;
+    /* Background highlight for TLS row */
+    rrct(pad,cy-2.0f,fw,tlsH+4.0f,8.0f,Vec4{0.11f,0.11f,0.16f,1.0f});
+    txt(pad+8.0f,cy+8.0f,"Use TLS/SSL",17.0f,Vec4{C_WHITE});
+    G.btns[0].rect={pad+fw-70.0f,cy,70.0f,34.0f};
+    G.btns[0].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};
+    toggleSwitch(pad+fw-62.0f,cy+2.0f,G.login.tls);
+    cy+=tlsH+12.0f;
 
-    /* Connect button */
-    y = G.h * 0.42f;
-    if (y < 630.0f) y = 630.0f; /* minimum below TLS row */
-    G.btns[1].rect={pad,y,fw,46.0f};
+    /* Divider before button */
+    rct(pad,cy,fw,1.0f,Vec4{C_DIVIDER});
+    cy+=14.0f;
+
+    /* Connect button inside card */
+    G.btns[1].rect={pad,cy,fw,btnH};
     G.btns[1].text="Connect";
     G.btns[1].color=Vec4{C_CYAN};
     btn(G.btns[1],20.0f);
 
     /* Footer */
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",13.0f))*0.5f,G.h-30.0f,
-        "Progressive IRC  v0.5.5-pre",13.0f,Vec4{C_HINT});
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
+        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
 
 /* ====== CHAT SCREEN ====== */
