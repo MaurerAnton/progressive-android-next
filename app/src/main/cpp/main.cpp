@@ -828,6 +828,11 @@ static void renderRoomInfo(){
     snprintf(buf,64,"Messages: %d",(int)r.msgs.size());
     txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=36.0f*G.dp;
     /* Actions */
+    /* Online status */
+    rrct((G.w-20.0f*G.dp)*0.5f,y,20.0f*G.dp,20.0f*G.dp,10.0f*G.dp,Vec4{C_GREEN});
+    y+=28.0f*G.dp;
+    txt((G.w-msr("Online",12.0f*G.dp))*0.5f,y,"Online",12.0f*G.dp,Vec4{C_GREEN});
+    y+=20.0f*G.dp;
     char nb[48];snprintf(nb,48,"Notifications: %s",G.login.notifsOn?"ON":"OFF");
     const char* acts[]={nb,"Pin room","Search messages","Leave room"};
     for(int i=0;i<4;i++){
@@ -1136,9 +1141,11 @@ static void renderChat(){
                 else if(strstr(word,"http"))wc=Vec4{C_CYAN};
                 else if(word[0]=='*'&&word[strlen(word)-1]=='*')wc=Vec4{0.95f,0.95f,1.0f,1.0f};
                 txt(lx,ly+lh*0.75f,word,tsz,wc,1.05f);}
-            /* Delivery checkmark for own messages */
+            /* Delivery/read checkmark for own messages */
             if(m.nick&&strcmp(m.nick,"me")==0){
-                txt(lx+msr(word,tsz)+4.0f,ly+lh*0.75f,"~",10.0f*G.dp,Vec4{C_LABEL});
+                const char*chk=m.threadCount>0?"~~":"~"; /* double check = read */
+                Vec4 chkCol=m.threadCount>0?Vec4{C_CYAN}:Vec4{C_LABEL};
+                txt(lx+msr(word,tsz)+4.0f,ly+lh*0.75f,chk,10.0f*G.dp,chkCol);
             }
             /* Thread reply count */
             if(m.threadCount>0){
