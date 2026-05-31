@@ -642,34 +642,34 @@ static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
     float dx=-G.dw+G.dx;
     rct(dx,0,G.dw,(float)G.h,Vec4{C_DRAWER});
-    txt(dx+12,40,"Rooms",14.0f*G.dp,Vec4{C_TITLE});
-    rct(dx,54,G.dw,1.0f,Vec4{C_DIVIDER});
-    float y=64.0f;
+    txt(dx+12.0f*G.dp,32.0f*G.dp,"Rooms",14.0f*G.dp,Vec4{C_TITLE});
+    rct(dx,44.0f*G.dp,G.dw,1.0f,Vec4{C_DIVIDER});
+    float y=52.0f*G.dp;
     for(size_t i=0;i<G.rooms.size();i++){
         bool sel=(int)i==G.activeRoom;
-        if(sel)rct(dx+4.0f,y+2.0f,G.dw-8.0f,40.0f,Vec4{C_SEL});
-        txt(dx+12,y+28,G.rooms[i].name,14.0f*G.dp,sel?Vec4{C_WHITE}:Vec4{C_LABEL});
+        if(sel)rct(dx+4.0f,y+2.0f,G.dw-8.0f,36.0f*G.dp,Vec4{C_SEL});
+        txt(dx+12.0f*G.dp,y+22.0f*G.dp,G.rooms[i].name,14.0f*G.dp,sel?Vec4{C_WHITE}:Vec4{C_LABEL});
         if(G.rooms[i].unread>0){
             char ub[8];snprintf(ub,8,"%d",G.rooms[i].unread);
             float uw=msr(ub,13.0f);
-            rrct(dx+G.dw-uw-20.0f,y+15.0f,uw+12.0f,18.0f,9.0f,Vec4{C_CYAN});
-            txt(dx+G.dw-uw-14.0f,y+28,ub,11.0f*G.dp,Vec4{C_WHITE});
-        }y+=48.0f;
+            rct(dx+G.dw-uw-20.0f,y+8.0f,uw+12.0f,18.0f,Vec4{C_CYAN});
+            txt(dx+G.dw-uw-14.0f,y+22.0f*G.dp,ub,11.0f*G.dp,Vec4{C_WHITE});
+        }y+=40.0f*G.dp;
     }
 }
 
 static void renderChat(){
     if(G.rooms.empty())return;
     Room&r=G.rooms[G.activeRoom];
-    float hdrH=52.0f;
+    float hdrH=40.0f*G.dp;
 
     rct(0,0,(float)G.w,hdrH,Vec4{C_DARK});
-    txt(50,34,r.name,16.0f*G.dp,Vec4{C_WHITE});
-    if(r.topic)txt(50,48,r.topic,11.0f*G.dp,Vec4{C_LABEL});
+    txt(12.0f*G.dp,hdrH*0.65f,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    if(r.topic)txt(12.0f*G.dp,hdrH-4.0f,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
-    float msgTop=hdrH+4.0f,msgBot=G.h-50.0f,area=msgBot-msgTop;
-    float lh=20.0f,total=r.msgs.size()*lh+8.0f;
+    float msgTop=hdrH+4.0f,msgBot=G.h-44.0f*G.dp,area=msgBot-msgTop;
+    float lh=18.0f*G.dp,total=r.msgs.size()*lh+8.0f;
     G.ms=total-area;if(G.ms<0)G.ms=0;
     if(G.sy<0)G.sy=0;if(G.sy>G.ms)G.sy=G.ms;
 
@@ -680,26 +680,27 @@ static void renderChat(){
     float my=msgTop+8.0f-G.sy;
     for(auto&m:r.msgs){
         char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
-        txt(6,my+15,ts,13.0f*G.dp,Vec4{C_TS},1.0f);
-        float tx=6+msr(ts,13.0f)+5.0f;
-        if(!m.nick)txt(tx,my+15,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
+        txt(6.0f*G.dp,my+lh*0.75f,ts,12.0f*G.dp,Vec4{C_TS},1.0f);
+        float tx=6.0f*G.dp+msr(ts,12.0f*G.dp)+4.0f;
+        if(!m.nick)txt(tx,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         else{
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
-            txt(tx,my+15,m.nick,14.0f*G.dp,nc,1.05f);
-            tx+=msr(m.nick,14.0f)+5.0f;
-            txt(tx,my+15,m.text,14.0f*G.dp,Vec4{C_WHITE},1.05f);
+            txt(tx,my+lh*0.75f,m.nick,13.0f*G.dp,nc,1.05f);
+            tx+=msr(m.nick,13.0f*G.dp)+4.0f;
+            txt(tx,my+lh*0.75f,m.text,13.0f*G.dp,Vec4{C_WHITE},1.05f);
         }my+=lh;
     }
     glDisable(GL_SCISSOR_TEST);
 
     /* Bottom input */
-    rct(0,msgBot,(float)G.w,50.0f,Vec4{C_INPUT});
+    float ibH=40.0f*G.dp;
+    rct(0,msgBot,(float)G.w,ibH,Vec4{C_INPUT});
     rct(0,msgBot,(float)G.w,1.0f,Vec4{C_DIVIDER});
-    rrct(6,msgBot+7,G.w-74.0f,36.0f,6.0f,Vec4{C_DARK});
+    rct(6.0f,msgBot+6.0f,G.w-74.0f,ibH-12.0f,Vec4{C_DARK});
     char hintBuf[128];
     snprintf(hintBuf,128,"Message #%s",r.name);
-    txt(14,msgBot+29,hintBuf,14.0f*G.dp,Vec4{C_HINT});
-    if(G.nb>0)btn(G.btns[G.nb-1],14.0f*G.dp);
+    txt(14.0f,msgBot+ibH*0.65f,hintBuf,13.0f*G.dp,Vec4{C_HINT});
+    if(G.nb>0)btn(G.btns[G.nb-1],13.0f*G.dp);
 
     /* Drawer overlay */
     if(G.ds!=DS_CLOSED){
