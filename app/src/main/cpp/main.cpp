@@ -954,6 +954,9 @@ static void renderChatList(){
         /* Member count */
         char mcnt[16];snprintf(mcnt,16,"%d",(int)r.msgs.size());
         txt(pad+ar+16.0f,y+rowH*0.86f,mcnt,9.0f*G.dp,Vec4{C_HINT});
+        /* Message count badge */
+        char mcb[16];snprintf(mcb,16,"%d msgs",(int)r.msgs.size());
+        txt(pad+ar+16.0f,y+rowH*0.86f,mcb,8.0f*G.dp,Vec4{C_HINT});
         /* Unread badge */
         if(r.unread>0){
             char ub[8];snprintf(ub,8,"%d",r.unread);
@@ -1068,7 +1071,10 @@ static void renderChat(){
     rrct(120.0f+msr(r.name,16.0f*G.dp)+8.0f,hdrH*0.75f-10.0f*G.dp,10.0f*G.dp,10.0f*G.dp,5.0f*G.dp,dotC);
     /* Federation indicator */
     txt(120.0f+msr(r.name,16.0f*G.dp)+22.0f,hdrH*0.75f,"F",9.0f*G.dp,Vec4{C_LABEL});
-    if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
+    if(r.topic){
+        char topicShort[64];snprintf(topicShort,64,"%.55s",r.topic);
+        txt(120.0f,hdrH*0.75f+14.0f*G.dp,topicShort,10.0f*G.dp,Vec4{C_LABEL});
+    }
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
     /* Message count + scroll indicator */
