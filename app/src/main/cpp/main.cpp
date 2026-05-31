@@ -88,7 +88,7 @@ enum DrawerState{DS_CLOSED,DS_OPEN};
 static struct{
     bool init;int w,h;float dp; /* density scale: 1sp = dp px */
     int logoW=0,logoH=0;
-    GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo;
+    GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
     struct{bool tls;int cat;int carouselPage;float carouselOff;}login; /* cat: 0=open source, 1=proprietary */
@@ -344,42 +344,9 @@ static void renderServerSelect(){
     float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f*G.dp,cardGap=8.0f*G.dp;
     float chipH=36.0f*G.dp;
     int page=G.login.carouselPage;
+    float y=G.h*0.03f;
 
-    /* === ONBOARDING CAROUSEL === */
-    struct{const char*title;}pages[]={
-        {"Own your conversations."},{"You're in control."},
-        {"Secure messaging."},{"Messaging for your team."},
-    };
-    Vec4 iconC[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
-    float is=G.w*0.14f,iy=G.h*0.03f;
-    rrct((G.w-is)*0.5f,iy,is,is,is*0.22f,iconC[page]);
-    float ty=iy+is+8.0f*G.dp,tsz=14.0f*G.dp;
-    txt((G.w-msr(pages[page].title,tsz))*0.5f,ty,pages[page].title,tsz,Vec4{C_WHITE});
-
-    /* Page dots */
-    float dotR=3.0f*G.dp,dotGap=8.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap;
-    float dotX=(G.w-dotW)*0.5f,dotY=ty+8.0f*G.dp;
-    for(int i=0;i<4;i++)
-        rrct(dotX+i*(dotR*2+dotGap),dotY,dotR*2,dotR*2,dotR,
-            i==page?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.32f,1.0f});
-
-    /* Buttons */
-    float btnY=dotY+14.0f*G.dp,btnW=G.w*0.76f,btnH=36.0f*G.dp,btnX=(G.w-btnW)*0.5f;
-    txt((G.w-msr("Sign In",12.0f*G.dp))*0.5f,btnY+4.0f,"Sign In",12.0f*G.dp,Vec4{C_CYAN});
-    G.btns[0].rect={btnX,btnY-btnH*0.3f,btnW,btnH*0.7f};
-    G.btns[0].color=Vec4{0,0,0,0};G.btns[0].text=nullptr;
-    btnY+=btnH*0.7f+4.0f*G.dp;
-    G.btns[1].rect={btnX,btnY,btnW,btnH};
-    G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};
-    btn(G.btns[1],12.0f*G.dp);
-
-    /* Divider */
-    float y=btnY+btnH+14.0f*G.dp;
-    rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
-    y+=14.0f*G.dp;
-
-    /* === PROTOCOL SELECTION === */
-    /* Logotype */
+    /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.20f; /* icon size */
         sprite((G.w-is)*0.5f,y,is,is,G.texLogo);
@@ -440,8 +407,41 @@ static void renderServerSelect(){
         y+=cardH+cardGap;
     }
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-26.0f,
-        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
+    /* === ONBOARDING AT BOTTOM === */
+    y+=6.0f*G.dp;
+    rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
+    y+=8.0f*G.dp;
+
+    struct{const char*title;}pages[]={
+        {"Own your conversations."},{"You're in control."},
+        {"Secure messaging."},{"Messaging for your team."},
+    };
+
+    /* Compact carousel: image + title side by side */
+    float is=G.w*0.12f;
+    if(G.texCar[page])sprite(pad+4.0f,y,is,is,G.texCar[page]);
+    float tsz=14.0f*G.dp;
+    txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
+    y+=is+4.0f*G.dp;
+
+    /* Page dots */
+    float dotR=3.0f*G.dp,dotGap=6.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap,dotX=(G.w-dotW)*0.5f;
+    for(int i=0;i<4;i++)
+        rrct(dotX+i*(dotR*2+dotGap),y,dotR*2,dotR*2,dotR,
+            i==page?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.32f,1.0f});
+    y+=10.0f*G.dp;
+
+    /* Buttons side by side */
+    float btnW=fw*0.48f,btnH=36.0f*G.dp;
+    G.btns[0].rect={pad,y,btnW,btnH};
+    G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};
+    btn(G.btns[0],12.0f*G.dp);
+    G.btns[1].rect={pad+btnW+fw*0.04f,y,btnW,btnH};
+    G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};
+    btn(G.btns[1],12.0f*G.dp);
+
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,
+        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
@@ -737,6 +737,29 @@ static bool initGL(JNIEnv*env,jobject am){
             stbi_image_free(lpx);
             G.logoW=lw;G.logoH=lh;
             LOGI("Launcher icon: %dx%d",lw,lh);
+        }
+    }
+
+    /* Load carousel images */
+    for(int ci=0;ci<4;ci++){
+        char cname[32];snprintf(cname,32,"carousel_%d.png",ci);
+        AAsset* ca=AAssetManager_open(G.amgr,cname,AASSET_MODE_BUFFER);
+        if(ca){
+            const void*cd=AAsset_getBuffer(ca);off_t clen=AAsset_getLength(ca);
+            int cw,ch,cc;
+            stbi_set_flip_vertically_on_load(0);
+            unsigned char*cpx=stbi_load_from_memory((const stbi_uc*)cd,clen,&cw,&ch,&cc,4);
+            stbi_set_flip_vertically_on_load(1);
+            AAsset_close(ca);
+            if(cpx){
+                glGenTextures(1,&G.texCar[ci]);glBindTexture(GL_TEXTURE_2D,G.texCar[ci]);
+                glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,cw,ch,0,GL_RGBA,GL_UNSIGNED_BYTE,cpx);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+                stbi_image_free(cpx);
+            }
         }
     }
 
