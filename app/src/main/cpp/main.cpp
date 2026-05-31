@@ -82,7 +82,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
+enum Screen{SCR_ONBOARD,SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -91,7 +91,7 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo;
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;}login; /* cat: 0=open source, 1=proprietary */
+    struct{bool tls;int cat;int carouselPage;float carouselOff;}login; /* cat: 0=open source, 1=proprietary */
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -258,6 +258,7 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
+        case SCR_ONBOARD: G.nb=2; break; /* sign in + create account */
         case SCR_SERVER: G.nb=8; break; /* 2 chips + 6 protocol cards */
         case SCR_MATRIX: G.nb=3; break; /* back + sign in + create account */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
@@ -271,6 +272,71 @@ static void layoutUI(){
             G.btns[G.nb++]=mkB(G.w-60.0f,G.h-48.0f,52,40,"Send",Vec4{C_CYAN});
             break;}
     }
+}
+
+/* ====== ONBOARDING CAROUSEL ====== */
+static void renderOnboard(){
+    int page=G.login.carouselPage;
+    /* Carousel content: 4 pages matching progressive-android splash */
+    struct{const char*title;const char*body;}pages[]={
+        {"Own your conversations.","Secure and independent communication, same privacy as a face-to-face conversation in your own home."},
+        {"You're in control.","Choose where your conversations are kept. Connected via Matrix, giving you full control."},
+        {"Secure messaging.","End-to-end encrypted, no phone number required. No ads, no data mining, no tracking."},
+        {"Messaging for your team.","Great for the workplace too. Trusted by the world's most secure organisations."},
+    };
+    int nPages=4;
+
+    /* Page indicator dots */
+    float dotY=G.h*0.52f,dotR=5.0f,dotGap=16.0f,dotW=nPages*(dotR*2+dotGap)-dotGap;
+    float dotX=(G.w-dotW)*0.5f;
+    for(int i=0;i<nPages;i++){
+        bool active=(i==page);
+        rrct(dotX+i*(dotR*2+dotGap),dotY,dotR*2,dotR*2,dotR,
+            active?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.30f,1.0f});
+    }
+
+    /* Page content area */
+    float pad=G.w*0.10f,contentW=G.w-pad*2;
+    float y=G.h*0.22f;
+
+    /* Icon placeholder (colored rect with accent) */
+    Vec4 iconColors[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
+    float is=G.w*0.28f;
+    rrct((G.w-is)*0.5f,y,is,is,20.0f,iconColors[page]);
+    y+=is+24.0f*G.dp;
+
+    /* Title */
+    txt((G.w-msr(pages[page].title,18.0f*G.dp))*0.5f,y,pages[page].title,18.0f*G.dp,Vec4{C_WHITE});
+    y+=28.0f*G.dp;
+
+    /* Body text - word wrap simulation: split into lines */
+    const char*body=pages[page].body;
+    /* Simple: render body at ~13sp with max width */
+    float maxW=G.w*0.80f;
+    /* Just render as single line for now, clipped to width */
+    txt((G.w-msr(body,13.0f*G.dp))*0.5f,y,body,13.0f*G.dp,Vec4{C_LABEL});
+
+    /* Buttons at bottom */
+    float btnW=G.w*0.78f,btnH=44.0f*G.dp;
+    float btnX=(G.w-btnW)*0.5f;
+    float btnY=G.h*0.78f;
+
+    /* Sign In button */
+    G.btns[0].rect={btnX,btnY,btnW,btnH};
+    G.btns[0].text="Sign In";
+    G.btns[0].color=Vec4{C_DARK};
+    btn(G.btns[0],14.0f*G.dp);
+    btnY+=btnH+12.0f*G.dp;
+
+    /* Create account button */
+    G.btns[1].rect={btnX,btnY,btnW,btnH};
+    G.btns[1].text="Create account";
+    G.btns[1].color=Vec4{C_CYAN};
+    btn(G.btns[1],14.0f*G.dp);
+
+    /* Version */
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",11.0f*G.dp))*0.5f,G.h-26.0f,
+        "Progressive IRC  v0.5.5-pre",11.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
@@ -544,7 +610,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_ONBOARD:renderOnboard();break;case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -558,13 +624,19 @@ static void td(float x,float y){
     }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
+    /* Carousel swipe tracking */
+    if(G.screen==SCR_ONBOARD){G.sid=1;G.sl=x;G.sv=0;return;}
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
     G.touching=false;G.sid=0;
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
-            if(G.screen==SCR_SERVER){
+            if(G.screen==SCR_ONBOARD){
+                if(i==0){LOGI("Sign In");G.screen=SCR_SERVER;layoutUI();}
+                else if(i==1){LOGI("Create account");G.screen=SCR_SERVER;layoutUI();}
+            }
+            else if(G.screen==SCR_SERVER){
                 if(i==0){G.login.cat=0;LOGI("Open source");}
                 else if(i==1){G.login.cat=1;LOGI("Proprietary");}
                 else if(i==2){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
@@ -589,7 +661,12 @@ static void tu(float x,float y){
 }
 static void tm(float x,float y){
     G.tx=x;G.ty=y;
-    if(G.sid==1){G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
+    if(G.sid==1){
+        if(G.screen==SCR_ONBOARD){
+            float dx=x-G.sl;
+            if(fabsf(dx)>60.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;}
+        }else{G.sy+=y-G.sl;G.sv=y-G.sl;G.sl=y;}
+    }
     for(int i=0;i<G.nb;i++)if(i==G.ab)G.btns[i].pressed=hit(x,y,G.btns[i].rect);
 }
 
@@ -654,7 +731,7 @@ static bool initGL(JNIEnv*env,jobject am){
     glViewport(0,0,G.w,G.h);
     G.dp=(float)G.w/411.0f; /* density scale: 1080px/411dp = 2.63 */
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
-    genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    genData();G.screen=SCR_ONBOARD;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
 }
 
