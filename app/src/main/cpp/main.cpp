@@ -336,8 +336,8 @@ static void renderOnboard(){
     G.btns[1].color=Vec4{C_CYAN};
     btn(G.btns[1],14.0f*G.dp);
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
-        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
+        "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
@@ -396,13 +396,13 @@ static void renderServerSelect(){
     int nCards=6;
     Card* cards=openSrc?openCards:propCards;
     for(int i=0;i<nCards;i++){
-        float alpha=cards[i].dim?0.40f:1.0f;
-        rrct(pad,y,fw,cardH,14.0f,Vec4{0.18f*alpha,0.18f*alpha,0.25f*alpha,1.0f});
+        float alpha=cards[i].dim?0.55f:1.0f;
+        rrct(pad,y,fw,cardH,14.0f,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
+        rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
         txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
         txt(pad+60.0f*G.dp,y+36.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
-        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_HINT});
+        if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_LABEL});
         G.btns[5+i].rect={pad,y,fw,cardH};
         G.btns[5+i].color=cards[i].accent;
         y+=cardH+cardGap;
@@ -448,8 +448,8 @@ static void renderServerSelect(){
     G.btns[2].text="Test without account";G.btns[2].color=Vec4{C_GREEN};
     btn(G.btns[2],12.0f*G.dp);
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,
-        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,
+        "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
@@ -522,8 +522,8 @@ static void renderIrcAuth(){
     btn(G.btns[2],14.0f*G.dp);
 
     /* Footer */
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
-        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
+        "Progressive Chat v0.5.5-pre",12.0f,Vec4{C_HINT});
 }
 
 /* ====== MATRIX LOGIN SCREEN ====== */
@@ -611,8 +611,8 @@ static void renderMatrixLogin(){
     G.btns[2].rect={(G.w-msr("Create account",14.0f*G.dp))*0.5f-8.0f,cy,msr("Create account",14.0f*G.dp)+16.0f,28.0f};
     G.btns[2].text=nullptr;G.btns[2].color=Vec4{0,0,0,0};
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
-        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
+        "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== SIGN UP SCREEN ====== */
@@ -651,8 +651,8 @@ static void renderSignup(){
     Button reg={{pad,cy,fw,48.0f*G.dp},"Register",Vec4{C_CYAN},false};
     btn(reg,14.0f*G.dp);
 
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
-        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
+        "Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== CHAT SCREEN ====== */
