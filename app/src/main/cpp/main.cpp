@@ -195,7 +195,7 @@ static void sprite(float x,float y,float w,float h,GLuint texture){
 
 static void btn(const Button&b,float ts){
     Vec4 bg=b.pressed?Vec4{C_BTN_PRESS}:b.color;
-    rrct(b.rect.x,b.rect.y,b.rect.w,b.rect.h,8.0f,bg);
+    rct(b.rect.x,b.rect.y,b.rect.w,b.rect.h,bg);
     if(b.text){float tw=msr(b.text,ts);
         txt(b.rect.x+(b.rect.w-tw)*0.5f,b.rect.y+b.rect.h*0.5f+ts*0.35f,b.text,ts,Vec4{C_WHITE});}
 }
@@ -361,10 +361,10 @@ static void renderServerSelect(){
     /* Category chips */
     float chipW=fw*0.5f-5.0f;
     bool openSrc=(G.login.cat==0);
-    rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
+    rct(pad,y,chipW,chipH,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[3].rect={pad,y,chipW,chipH};
-    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
+    rct(pad+chipW+10.0f,y,chipW,chipH,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[4].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
@@ -394,7 +394,7 @@ static void renderServerSelect(){
     Card* cards=openSrc?openCards:propCards;
     for(int i=0;i<nCards;i++){
         float alpha=cards[i].dim?0.55f:1.0f;
-        rrct(pad,y,fw,cardH,14.0f,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
+        rct(pad,y,fw,cardH,Vec4{0.22f*alpha,0.22f*alpha,0.30f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
         rrct(pad+12.0f*G.dp,y+8.0f*G.dp,40.0f*G.dp,40.0f*G.dp,12.0f*G.dp,Vec4{cards[i].accent.r*0.45f*alpha,cards[i].accent.g*0.45f*alpha,cards[i].accent.b*0.45f*alpha,1.0f});
         txt(pad+60.0f*G.dp,y+16.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
