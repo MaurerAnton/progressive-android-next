@@ -1063,6 +1063,8 @@ static void renderChat(){
     if(G.mtxState==MTX_CONNECTING)dotC=Vec4{0.85f,0.75f,0.25f,1.0f}; /* yellow */
     else if(G.mtxState==MTX_ERROR)dotC=Vec4{0.95f,0.35f,0.35f,1.0f}; /* red */
     rrct(120.0f+msr(r.name,16.0f*G.dp)+8.0f,hdrH*0.75f-10.0f*G.dp,10.0f*G.dp,10.0f*G.dp,5.0f*G.dp,dotC);
+    /* Federation indicator */
+    txt(120.0f+msr(r.name,16.0f*G.dp)+22.0f,hdrH*0.75f,"F",9.0f*G.dp,Vec4{C_LABEL});
     if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
