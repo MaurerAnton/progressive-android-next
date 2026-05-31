@@ -343,11 +343,43 @@ static void renderOnboard(){
 static void renderServerSelect(){
     float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f*G.dp,cardGap=8.0f*G.dp;
     float chipH=36.0f*G.dp;
-    float totalH=70.0f+34.0f+28.0f+28.0f+chipH+28.0f+6*(cardH+cardGap)+40.0f;
-    float y=G.h*0.04f;
-    if(y<G.h*0.02f)y=G.h*0.02f;
+    int page=G.login.carouselPage;
 
-    /* Real launcher icon + logotype text */
+    /* === ONBOARDING CAROUSEL === */
+    struct{const char*title;}pages[]={
+        {"Own your conversations."},{"You're in control."},
+        {"Secure messaging."},{"Messaging for your team."},
+    };
+    Vec4 iconC[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
+    float is=G.w*0.14f,iy=G.h*0.03f;
+    rrct((G.w-is)*0.5f,iy,is,is,is*0.22f,iconC[page]);
+    float ty=iy+is+8.0f*G.dp,tsz=14.0f*G.dp;
+    txt((G.w-msr(pages[page].title,tsz))*0.5f,ty,pages[page].title,tsz,Vec4{C_WHITE});
+
+    /* Page dots */
+    float dotR=3.0f*G.dp,dotGap=8.0f*G.dp,dotW=4*(dotR*2+dotGap)-dotGap;
+    float dotX=(G.w-dotW)*0.5f,dotY=ty+8.0f*G.dp;
+    for(int i=0;i<4;i++)
+        rrct(dotX+i*(dotR*2+dotGap),dotY,dotR*2,dotR*2,dotR,
+            i==page?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.32f,1.0f});
+
+    /* Buttons */
+    float btnY=dotY+14.0f*G.dp,btnW=G.w*0.76f,btnH=36.0f*G.dp,btnX=(G.w-btnW)*0.5f;
+    txt((G.w-msr("Sign In",12.0f*G.dp))*0.5f,btnY+4.0f,"Sign In",12.0f*G.dp,Vec4{C_CYAN});
+    G.btns[0].rect={btnX,btnY-btnH*0.3f,btnW,btnH*0.7f};
+    G.btns[0].color=Vec4{0,0,0,0};G.btns[0].text=nullptr;
+    btnY+=btnH*0.7f+4.0f*G.dp;
+    G.btns[1].rect={btnX,btnY,btnW,btnH};
+    G.btns[1].text="Create account";G.btns[1].color=Vec4{C_CYAN};
+    btn(G.btns[1],12.0f*G.dp);
+
+    /* Divider */
+    float y=btnY+btnH+14.0f*G.dp;
+    rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
+    y+=14.0f*G.dp;
+
+    /* === PROTOCOL SELECTION === */
+    /* Logotype */
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.20f; /* icon size */
         sprite((G.w-is)*0.5f,y,is,is,G.texLogo);
@@ -363,13 +395,13 @@ static void renderServerSelect(){
     /* Category chips */
     float chipW=fw*0.5f-5.0f;
     bool openSrc=(G.login.cat==0);
-    rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
+    rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",12.0f*G.dp,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[0].rect={pad,y,chipW,chipH};
+    G.btns[2].rect={pad,y,chipW,chipH};
 
-    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
+    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.25f,0.25f,0.33f,1.0f}:Vec4{0.12f,0.12f,0.17f,1.0f});
     txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",12.0f*G.dp,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
-    G.btns[1].rect={pad+chipW+10.0f,y,chipW,chipH};
+    G.btns[3].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+16.0f*G.dp;
 
     txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",11.0f*G.dp,Vec4{C_HINT});
@@ -397,7 +429,7 @@ static void renderServerSelect(){
     Card* cards=openSrc?openCards:propCards;
     for(int i=0;i<nCards;i++){
         float alpha=cards[i].dim?0.40f:1.0f;
-        rrct(pad,y,fw,cardH,14.0f,Vec4{0.12f*alpha,0.12f*alpha,0.18f*alpha,1.0f});
+        rrct(pad,y,fw,cardH,14.0f,Vec4{0.18f*alpha,0.18f*alpha,0.25f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
         rrct(pad+12.0f*G.dp,y+10.0f*G.dp,44.0f*G.dp,44.0f*G.dp,14.0f*G.dp,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
         txt(pad+64.0f*G.dp,y+18.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
