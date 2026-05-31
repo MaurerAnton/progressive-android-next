@@ -755,14 +755,25 @@ static void td(float x,float y){
     G.tx=x;G.ty=y;G.touching=true;
     if(G.screen==SCR_CHAT&&G.ds==DS_OPEN&&x<G.dw){
         int h=hitB(x,y);
-        if(h==1){G.ds=DS_CLOSED;G.dx=0;} /* drawer toggle closes */
+        if(h==1){G.ds=DS_CLOSED;G.dx=0;}
         else if(h>=2&&h<=1+(int)G.rooms.size()){G.activeRoom=h-2;G.sy=0;G.ds=DS_CLOSED;G.dx=0;layoutUI();}
         return;
     }
+    /* Message tap in chat: open profile for tapped user */
+    if(G.screen==SCR_CHAT&&x>20.0f*G.dp&&x<G.w-80.0f){
+        float hdrH=40.0f*G.dp,msgTop=hdrH+4.0f,lh=18.0f*G.dp;
+        float relY=y-msgTop+G.sy;
+        int msgIdx=(int)(relY/lh);
+        Room&r=G.rooms[G.activeRoom];
+        if(msgIdx>=0&&msgIdx<(int)r.msgs.size()&&r.msgs[msgIdx].nick){
+            strncpy(G.login.profileNick,r.msgs[msgIdx].nick,31);
+            G.login.profileNick[31]=0;
+            G.login.profileNickLen=strlen(G.login.profileNick);
+            G.screen=SCR_PROFILE;layoutUI();return;
+        }
+    }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
-    /* Carousel swipe in bottom area */
-    if(G.screen==SCR_SERVER&&y>G.h*0.72f){G.sid=2;G.sl=x;return;}
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
