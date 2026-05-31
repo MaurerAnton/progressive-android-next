@@ -440,6 +440,11 @@ static void renderServerSelect(){
     int page=G.login.carouselPage;
     float y=G.h*0.02f;
 
+    /* What's new banner */
+    rrct(G.w*0.1f,y,G.w*0.8f,24.0f*G.dp,8.0f,Vec4{0.10f,0.15f,0.25f,1.0f});
+    txt((G.w-msr("What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp))*0.5f,y+15.0f*G.dp,"What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp,Vec4{C_CYAN});
+    y+=28.0f*G.dp;
+
     /* Profile avatar placeholder (top right) */
     float avR=18.0f*G.dp,avX=G.w-avR*2-8.0f,avY=G.h*0.02f+avR*2+12.0f*G.dp;
     rrct(avX,avY,avR*2,avR*2,avR,Vec4{0.45f,0.35f,0.70f,1.0f});
