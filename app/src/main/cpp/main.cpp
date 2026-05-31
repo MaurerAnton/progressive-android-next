@@ -912,9 +912,12 @@ static void renderChatList(){
         G.btns[2+i].color=Vec4{0,0,0,0};G.btns[2+i].text=nullptr;
         y+=rowH+4.0f*G.dp;
     }
-    /* Sync indicator */
+    /* Sync indicator with spinner */
     if(G.mtxState==MTX_CONNECTING){
-        txt(pad+(fw-msr("Syncing...",11.0f*G.dp))*0.5f,y+14.0f*G.dp,"Syncing...",11.0f*G.dp,Vec4{C_CYAN});
+        static int sf=0;sf++;
+        const char*spins[]={"|","/","-","\\"};
+        char sbuf[32];snprintf(sbuf,32,"%s Syncing...",spins[(sf/15)%4]);
+        txt(pad+(fw-msr(sbuf,11.0f*G.dp))*0.5f,y+14.0f*G.dp,sbuf,11.0f*G.dp,Vec4{C_CYAN});
     }
     /* Profile button at bottom */
     float btnH=36.0f*G.dp;
