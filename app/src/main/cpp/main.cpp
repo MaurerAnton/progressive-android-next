@@ -805,6 +805,10 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_PROFILE){
                 if(i==0){LOGI("Back");G.screen=SCR_CHAT;layoutUI();}
+                else if(i==1){LOGI("Send message");G.screen=SCR_CHAT;layoutUI();}
+                else if(i==2){LOGI("View details");}
+                else if(i==3){LOGI("Mention");G.screen=SCR_CHAT;layoutUI();}
+                else if(i==4){LOGI("Block user");G.screen=SCR_CHAT;layoutUI();}
             }
             else if(G.screen==SCR_SETTINGS){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
