@@ -571,6 +571,8 @@ static void renderServerSelect(){
     txt(G.w-msr("Settings",10.0f*G.dp)-60.0f,G.h-50.0f+28.0f,"Settings",10.0f*G.dp,Vec4{C_HINT});
 
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+    /* Help link */
+    txt((G.w-msr("Need help? Learn more",10.0f*G.dp))*0.5f,G.h-38.0f,"Need help? Learn more",10.0f*G.dp,Vec4{C_CYAN});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
