@@ -82,7 +82,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -264,6 +264,7 @@ static void layoutUI(){
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_PROFILE: G.nb=5; break; /* back + 4 action buttons */
         case SCR_SETTINGS: G.nb=2; break; /* back + about */
+        case SCR_ROOMINFO: G.nb=5; break; /* back + 4 management buttons */
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(6,6,42,42,"<",Vec4{C_DARK}); /* back */
             G.btns[G.nb++]=mkB(52,6,42,42,"#",Vec4{C_DARK}); /* drawer toggle */
@@ -666,6 +667,39 @@ static void renderSettings(){
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
+/* ====== ROOM INFO SCREEN ====== */
+static void renderRoomInfo(){
+    if(G.rooms.empty())return;
+    Room&r=G.rooms[G.activeRoom];
+    G.btns[0].rect={8,8,50,40};G.btns[0].text="<";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],14.0f*G.dp);
+    float pad=G.w*0.08f,fw=G.w*0.84f,y=G.h*0.08f;
+    /* Room avatar */
+    float ar=G.w*0.12f;rrct((G.w-ar)*0.5f,y,ar,ar,ar*0.5f,Vec4{C_CYAN});
+    txt((G.w-msr("#",ar*0.5f))*0.5f,y+ar*0.55f,"#",ar*0.5f,Vec4{C_WHITE},1.0f);
+    y+=ar+16.0f*G.dp;
+    txt((G.w-msr(r.name,20.0f*G.dp))*0.5f,y,r.name,20.0f*G.dp,Vec4{C_WHITE});
+    y+=28.0f*G.dp;
+    if(r.topic){txt((G.w-msr(r.topic,12.0f*G.dp))*0.5f,y,r.topic,12.0f*G.dp,Vec4{C_LABEL});y+=22.0f*G.dp;}
+    y+=16.0f*G.dp;
+    rct(pad,y,fw,1,Vec4{C_DIVIDER});y+=16.0f*G.dp;
+    /* Info */
+    char buf[64];
+    snprintf(buf,64,"Members: %d",(int)r.msgs.size());
+    txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=28.0f*G.dp;
+    snprintf(buf,64,"Messages: %d",(int)r.msgs.size());
+    txt(pad,y,buf,14.0f*G.dp,Vec4{C_LABEL});y+=36.0f*G.dp;
+    /* Actions */
+    const char* acts[]={"Notifications: On","Pin room","Search messages","Leave room"};
+    for(int i=0;i<4;i++){
+        rrct(pad,y,fw,44.0f*G.dp,10.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+        txt(pad+16.0f,y+28.0f*G.dp,acts[i],14.0f*G.dp,i==3?Vec4{0.95f,0.35f,0.35f,1.0f}:Vec4{C_WHITE});
+        G.btns[1+i].rect={pad,y,fw,44.0f*G.dp};
+        G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
+        y+=48.0f*G.dp;
+    }
+    txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-22.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+}
+
 /* ====== CHAT SCREEN ====== */
 static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
@@ -754,7 +788,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_ROOMINFO:renderRoomInfo();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -768,7 +802,10 @@ static void td(float x,float y){
     }
     /* Message tap in chat: open profile for tapped user */
     if(G.screen==SCR_CHAT&&x>20.0f*G.dp&&x<G.w-80.0f){
-        float hdrH=40.0f*G.dp,msgTop=hdrH+4.0f,lh=18.0f*G.dp;
+        /* Check if tap is in header area -> room info */
+        float hdrH=40.0f*G.dp;
+        if(y<hdrH){G.screen=SCR_ROOMINFO;layoutUI();return;}
+        float msgTop=hdrH+4.0f,lh=18.0f*G.dp;
         float relY=y-msgTop+G.sy;
         int msgIdx=(int)(relY/lh);
         Room&r=G.rooms[G.activeRoom];
@@ -838,6 +875,10 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_SETTINGS){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+            }
+            else if(G.screen==SCR_ROOMINFO){
+                if(i==0){G.screen=SCR_CHAT;layoutUI();}
+                /* i=1..4 are room management actions */
             }
             else if(G.screen==SCR_IRC){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
