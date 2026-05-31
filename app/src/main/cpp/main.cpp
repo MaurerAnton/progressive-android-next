@@ -82,7 +82,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -260,6 +260,7 @@ static void layoutUI(){
     switch(G.screen){
         case SCR_SERVER: G.nb=10; break; /* 2 buttons + 2 chips + 6 cards */
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
+        case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(6,6,42,42,"<",Vec4{C_DARK}); /* back */
@@ -610,6 +611,46 @@ static void renderMatrixLogin(){
         "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
+/* ====== SIGN UP SCREEN ====== */
+static void renderSignup(){
+    G.btns[0].rect={8.0f,8.0f,50.0f,40.0f};
+    G.btns[0].text="<";G.btns[0].color=Vec4{C_DARK};
+    btn(G.btns[0],14.0f*G.dp);
+
+    float pad=G.w*0.06f,fw=G.w*0.88f;
+    float fieldH=52.0f*G.dp,fieldGap=24.0f*G.dp;
+    float titleH=40.0f*G.dp,cardPad=24.0f*G.dp;
+    float cardH=titleH+3*(fieldH+fieldGap)+cardPad*2+48.0f*G.dp+20.0f*G.dp;
+    float cardY=(G.h-cardH)*0.20f;
+    if(cardY<G.h*0.02f)cardY=G.h*0.02f;
+    rrct(pad-6.0f,cardY,fw+12.0f,cardH,16.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
+
+    float cy=cardY+cardPad;
+    txt(pad,cy+8.0f,"Create account",18.0f*G.dp,Vec4{C_TITLE});
+    cy+=titleH+8.0f*G.dp;
+    rct(pad,cy,fw,1.0f,Vec4{C_DIVIDER});
+    cy+=16.0f*G.dp;
+
+    const char* labels[]={"Username","Password","Confirm password"};
+    for(int i=0;i<3;i++){
+        txt(pad+4.0f,cy,labels[i],13.0f*G.dp,Vec4{C_TITLE},1.05f);
+        rrct(pad,cy+18.0f,fw,fieldH,10.0f,Vec4{0.12f,0.12f,0.17f,1.0f});
+        rct(pad,cy+18.0f+fieldH-2.0f,fw,2.0f,Vec4{0.22f,0.25f,0.32f,1.0f});
+        txt(pad+14.0f,cy+18.0f+fieldH*0.5f+5.0f,i==0?"@user:matrix.org":(i>=1?"********":""),16.0f*G.dp,Vec4{C_WHITE},1.03f);
+        G.btns[1+i].rect={pad,cy-24.0f*G.dp,fw,fieldH+18.0f};
+        G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
+        cy+=fieldH+fieldGap;
+    }
+    cy+=8.0f*G.dp;
+
+    /* Register button */
+    Button reg={{pad,cy,fw,48.0f*G.dp},"Register",Vec4{C_CYAN},false};
+    btn(reg,14.0f*G.dp);
+
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
+        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
+}
+
 /* ====== CHAT SCREEN ====== */
 static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
@@ -683,7 +724,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -717,11 +758,14 @@ static void tu(float x,float y){
             else if(G.screen==SCR_MATRIX){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;G.login.focusField=0;layoutUI();}
                 else if(i==1){LOGI("Sign in");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
-                else if(i==2){LOGI("Create account");}
+                else if(i==2){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();}
                 /* i==3,4,5 are field touch areas */
                 else if(i==3)G.login.focusField=1;
                 else if(i==4)G.login.focusField=2;
                 else if(i==5)G.login.focusField=3;
+            }
+            else if(G.screen==SCR_SIGNUP){
+                if(i==0){LOGI("Back");G.screen=SCR_MATRIX;layoutUI();}
             }
             else if(G.screen==SCR_IRC){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
