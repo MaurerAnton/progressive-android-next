@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <ctime>
 
 #define LOG_TAG "PNext"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -91,7 +92,9 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;char mention[64];int mentionLen;int filterUser;bool searchMode;char searchQ[32];int searchQLen;bool notifsOn;}login;
+    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;char mention[64];int mentionLen;int filterUser;bool searchMode;char searchQ[32];int searchQLen;bool notifsOn;char chatInput[256];int chatInputLen;int replyTo;}login;
+    float tdTime;
+    int longPressIdx;bool ctxMenu;float ctxMX,ctxMY;
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -797,38 +800,58 @@ static void renderChat(){
     }
 
     float msgTop=hdrH+4.0f,msgBot=G.h-44.0f*G.dp,area=msgBot-msgTop;
-    float lh=18.0f*G.dp,total=r.msgs.size()*lh+8.0f;
-    G.ms=total-area;if(G.ms<0)G.ms=0;
-    if(G.sy<0)G.sy=0;if(G.sy>G.ms)G.sy=G.ms;
 
     glEnable(GL_SCISSOR_TEST);
     glScissor(0,(GLint)(G.h-msgBot),G.w,(GLsizei)area);
     rct(0,msgTop,(float)G.w,area,Vec4{C_BG});
 
-    float my=msgTop+8.0f-G.sy;
-    for(auto&m:r.msgs){
-        /* Filter: only show messages from profile user if filterUser set */
+    /* Calculate total scroll height with word wrap */
+    float tsz=13.0f*G.dp,lh=18.0f*G.dp;
+    float msgX=6.0f*G.dp+msr("[00:00]",12.0f*G.dp)+4.0f;
+    float msgMaxW=G.w-msgX-14.0f*G.dp;
+    struct MsgRow{int mi;float y;float h;};
+    std::vector<MsgRow> rows;
+    float totalH=0;
+    for(int mi=0;mi<(int)r.msgs.size();mi++){
+        auto&m=r.msgs[mi];
         if(G.login.filterUser>0&&(!m.nick||strcmp(m.nick,G.login.profileNick)!=0))continue;
-        /* Search filter: only show matching messages */
         if(G.login.searchMode&&G.login.searchQLen>0){
             bool match=false;
             if(m.nick&&strstr(m.nick,G.login.searchQ))match=true;
             if(m.text&&strstr(m.text,G.login.searchQ))match=true;
             if(!match)continue;
         }
+        int nLines=1;
+        if(m.text){
+            float cx=msgX,wid=msgMaxW-(m.nick?msr(m.nick,tsz)+4.0f+35.0f:0);
+            float lx=cx;
+            for(const char*p=m.text;*p;p++){
+                lx+=kGlyphs[(*p>=32&&*p<=126)?*p-32:0].advance*tsz*1.15f;
+                if(lx>cx+wid&&(*p==' '||*p==','||*p=='.')){nLines++;lx=cx;}
+            }
+        }
+        float mh=nLines*lh+2.0f;
+        rows.push_back({mi,totalH,mh});totalH+=mh;
+    }
+    float total=totalH+8.0f;
+    G.ms=total-area;if(G.ms<0)G.ms=0;
+    if(G.sy<0)G.sy=0;if(G.sy>G.ms)G.sy=G.ms;
+
+    for(auto&rw:rows){
+        float my=msgTop+8.0f+rw.y-G.sy;
+        if(my+rw.h<msgTop||my>msgBot)continue;
+        auto&m=r.msgs[rw.mi];
         char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
         txt(6.0f*G.dp,my+lh*0.75f,ts,12.0f*G.dp,Vec4{C_TS},1.0f);
         float tx=6.0f*G.dp+msr(ts,12.0f*G.dp)+4.0f;
-        if(!m.nick)txt(tx,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
+        if(!m.nick)txt(msgX,my+lh*0.75f,m.text,tsz,Vec4{C_SYSMSG},1.0f);
         else{
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
-            /* Avatar circle */
             float ax=tx-2.0f,ay=my+lh*0.3f,ar=lh*0.35f;
             rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
             char init[2]={(char)m.nick[0],0};
             txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
             tx=ax+ar*2+6.0f;
-            /* Type indicator */
             const char* tpref="";
             Vec4 tc=nc;
             if(m.type==1){tpref="[IMG] ";tc=Vec4{0.30f,0.65f,0.85f,1.0f};}
@@ -838,27 +861,61 @@ static void renderChat(){
             else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
             if(m.type>0){txt(tx,my+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);tx+=msr(tpref,10.0f*G.dp);}
-            txt(tx,my+lh*0.75f,m.nick,13.0f*G.dp,nc,1.05f);
-            tx+=msr(m.nick,13.0f*G.dp)+4.0f;
-            txt(tx,my+lh*0.75f,m.text,13.0f*G.dp,Vec4{C_WHITE},1.05f);
-        }my+=lh;
+            txt(tx,my+lh*0.75f,m.nick,tsz,nc,1.05f);
+            tx+=msr(m.nick,tsz)+4.0f;
+            txt(tx,my+lh*0.75f,m.text,tsz,Vec4{C_WHITE},1.05f);
+        }
     }
     glDisable(GL_SCISSOR_TEST);
+
+    /* Reply quote bar */
+    if(G.login.replyTo>=0&&G.login.replyTo<(int)r.msgs.size()){
+        auto&rm=r.msgs[G.login.replyTo];
+        float ry=msgTop;
+        rct(0,ry,(float)G.w,24.0f*G.dp,Vec4{0.06f,0.06f,0.10f,1.0f});
+        rct(0,ry,3.0f,24.0f*G.dp,Vec4{C_CYAN});
+        char rbuf[128];
+        snprintf(rbuf,128,"Replying to %s",rm.nick?rm.nick:"system");
+        txt(14.0f*G.dp,ry+15.0f*G.dp,rbuf,11.0f*G.dp,Vec4{C_CYAN});
+        rct(G.w-32.0f,ry+2.0f,24.0f,20.0f*G.dp,Vec4{0,0,0,0});
+        txt(G.w-28.0f,ry+15.0f*G.dp,"X",11.0f*G.dp,Vec4{0.8f,0.3f,0.3f,1.0f});
+        msgTop+=24.0f*G.dp;
+    }
 
     /* Bottom input */
     float ibH=40.0f*G.dp;
     rct(0,msgBot,(float)G.w,ibH,Vec4{C_INPUT});
     rct(0,msgBot,(float)G.w,1.0f,Vec4{C_DIVIDER});
     rct(6.0f,msgBot+6.0f,G.w-74.0f,ibH-12.0f,Vec4{C_DARK});
-    char hintBuf[128];
-    if(G.login.mentionLen>0){
-        snprintf(hintBuf,128,"%s",G.login.mention);
-        G.login.mentionLen=0; /* clear after showing */
+    if(G.login.chatInputLen>0){
+        char inbuf[256];memcpy(inbuf,G.login.chatInput,G.login.chatInputLen);inbuf[G.login.chatInputLen]=0;
+        txt(14.0f,msgBot+ibH*0.65f,inbuf,13.0f*G.dp,Vec4{C_WHITE});
     }else{
-        snprintf(hintBuf,128,"Message #%s",r.name);
+        char hintBuf[64];
+        if(G.login.mentionLen>0){snprintf(hintBuf,64,"%s",G.login.mention);G.login.mentionLen=0;}
+        else snprintf(hintBuf,64,"Message #%s",r.name);
+        txt(14.0f,msgBot+ibH*0.65f,hintBuf,13.0f*G.dp,Vec4{C_HINT});
     }
-    txt(14.0f,msgBot+ibH*0.65f,hintBuf,13.0f*G.dp,Vec4{C_HINT});
     if(G.nb>0)btn(G.btns[G.nb-1],13.0f*G.dp);
+
+    /* Context menu overlay */
+    if(G.ctxMenu){
+        float cx=G.ctxMX,cy=G.ctxMY;
+        rct(0,0,(float)G.w,(float)G.h,Vec4{0,0,0,0.4f});
+        const char*citems[]={"Reply","Copy","Pin","Delete"};
+        Vec4 ccols[]={Vec4{C_CYAN},Vec4{C_WHITE},Vec4{C_GREEN},Vec4{0.95f,0.35f,0.35f,1.0f}};
+        float cmw=160.0f,cmh=36.0f*G.dp;
+        float cmx=cx-cmw*0.5f,cmy=cy-cmh*2.0f;
+        if(cmx<8.0f)cmx=8.0f;if(cmx+cmw>G.w-8.0f)cmx=G.w-cmw-8.0f;
+        if(cmy<60.0f)cmy=cy+20.0f;
+        rrct(cmx-4.0f,cmy-4.0f,cmw+8.0f,cmh*4+8.0f,12.0f,Vec4{0.15f,0.15f,0.25f,0.95f});
+        for(int ci=0;ci<4;ci++){
+            rct(cmx,cmy+ci*cmh,cmw,cmh,ci==G.longPressIdx?Vec4{C_SEL}:Vec4{0,0,0,0});
+            txt(cmx+12.0f,cmy+ci*cmh+cmh*0.65f,citems[ci],13.0f*G.dp,ccols[ci]);
+            G.btns[11+ci].rect={cmx,cmy+ci*cmh,cmw,cmh};
+            G.btns[11+ci].color=Vec4{0,0,0,0};G.btns[11+ci].text=nullptr;
+        }
+    }
 
     /* Drawer overlay */
     if(G.ds!=DS_CLOSED){
@@ -874,7 +931,14 @@ static void frame(){
 
 /* ====== TOUCH ====== */
 static void td(float x,float y){
-    G.tx=x;G.ty=y;G.touching=true;
+    G.tx=x;G.ty=y;G.touching=true;G.tdTime=(float)clock()/(float)CLOCKS_PER_SEC;
+    /* Dismiss context menu on tap */
+    if(G.ctxMenu){G.ctxMenu=false;return;}
+    /* Reply close button */
+    if(G.screen==SCR_CHAT&&G.login.replyTo>=0){
+        float ry=G.h-44.0f*G.dp-(40.0f*G.dp)+24.0f*G.dp;
+        if(x>=G.w-32.0f&&y>=ry+2.0f&&y<=ry+22.0f*G.dp){G.login.replyTo=-1;return;}
+    }
     /* Search close button (X) in chat */
     if(G.screen==SCR_CHAT&&G.login.searchMode){
         float hdrH=84.0f*G.dp;
@@ -887,30 +951,83 @@ static void td(float x,float y){
         else if(h>=2&&h<=1+(int)G.rooms.size()){G.activeRoom=h-2;G.sy=0;G.ds=DS_CLOSED;G.dx=0;layoutUI();}
         return;
     }
-    /* Message tap in chat: open profile for tapped user */
+    /* Input field tap in chat -> focus for keyboard */
+    if(G.screen==SCR_CHAT&&y>G.h-48.0f*G.dp){
+        G.login.focusField=4;return;
+    }
+    /* Message tap in chat: find message index for long-press or profile tap */
     if(G.screen==SCR_CHAT&&x>20.0f*G.dp&&x<G.w-80.0f){
-        /* Check if tap is in header area -> room info */
-        float hdrH=40.0f*G.dp;
+        float hdrH=84.0f*G.dp;
         if(y<hdrH){G.screen=SCR_ROOMINFO;layoutUI();return;}
-        float msgTop=hdrH+4.0f,lh=18.0f*G.dp;
+        float msgTop=hdrH+4.0f;
         float relY=y-msgTop+G.sy;
-        int msgIdx=(int)(relY/lh);
         Room&r=G.rooms[G.activeRoom];
-        if(msgIdx>=0&&msgIdx<(int)r.msgs.size()&&r.msgs[msgIdx].nick){
-            strncpy(G.login.profileNick,r.msgs[msgIdx].nick,31);
-            G.login.profileNick[31]=0;
-            G.login.profileNickLen=strlen(G.login.profileNick);
-            G.screen=SCR_PROFILE;layoutUI();return;
+        float lh=18.0f*G.dp;
+        float cx=0;
+        for(int mi=0;mi<(int)r.msgs.size();mi++){
+            auto&m=r.msgs[mi];
+            if(G.login.filterUser>0&&(!m.nick||strcmp(m.nick,G.login.profileNick)!=0))continue;
+            if(G.login.searchMode&&G.login.searchQLen>0){
+                bool match=false;
+                if(m.nick&&strstr(m.nick,G.login.searchQ))match=true;
+                if(m.text&&strstr(m.text,G.login.searchQ))match=true;
+                if(!match)continue;
+            }
+            float mh=lh+2.0f;
+            if(relY>=cx&&relY<cx+mh){
+                G.longPressIdx=mi;G.sid=3;G.sl=x;
+                if(m.nick){
+                    strncpy(G.login.profileNick,m.nick,31);G.login.profileNick[31]=0;
+                    G.login.profileNickLen=strlen(G.login.profileNick);
+                }
+                return;
+            }
+            cx+=mh;
         }
+        return;
     }
     int h=hitB(x,y);
     if(h>=0){G.btns[h].pressed=true;G.ab=h;return;}
     if(G.screen==SCR_CHAT&&x>G.dw){G.sid=1;G.sl=y;G.sv=0;}
 }
 static void tu(float x,float y){
-    G.touching=false;G.sid=0;
+    G.touching=false;
+    float dt=(float)clock()/(float)CLOCKS_PER_SEC-G.tdTime;
+    bool wasLong=G.sid==3&&dt>0.5f;
+    /* Long-press: show context menu */
+    if(wasLong&&G.longPressIdx>=0){
+        G.ctxMenu=true;G.ctxMX=x;G.ctxMY=y;G.sid=0;return;
+    }
+    /* Short tap on message -> profile */
+    if(G.sid==3&&!wasLong&&G.longPressIdx>=0){
+        Room&r=G.rooms[G.activeRoom];
+        if(G.longPressIdx<(int)r.msgs.size()&&r.msgs[G.longPressIdx].nick){
+            G.screen=SCR_PROFILE;layoutUI();G.sid=0;return;
+        }
+        G.sid=0;
+    }
+    /* Swipe-to-reply: horizontal swipe on message */
+    if(G.sid==3&&fabsf(x-G.sl)>100.0f&&x>G.sl){
+        Room&r=G.rooms[G.activeRoom];
+        if(G.longPressIdx>=0&&G.longPressIdx<(int)r.msgs.size()){
+            G.login.replyTo=G.longPressIdx;
+        }
+        G.sid=0;return;
+    }
+    G.sid=0;
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
+            /* Context menu actions */
+            if(G.ctxMenu&&i>=11&&i<=14){
+                int ci=i-11;
+                Room&r=G.rooms[G.activeRoom];
+                if(G.longPressIdx>=0&&G.longPressIdx<(int)r.msgs.size()){
+                    auto&m=r.msgs[G.longPressIdx];
+                    if(ci==0){G.login.replyTo=G.longPressIdx;}
+                    else if(ci==3){r.msgs.erase(r.msgs.begin()+G.longPressIdx);}
+                }
+                G.ctxMenu=false;return;
+            }
             if(G.screen==SCR_SERVER){
                 if(i==0){LOGI("Sign In");}
                 else if(i==1){LOGI("Create account");}
@@ -974,9 +1091,18 @@ static void tu(float x,float y){
                 else if(i==1){G.login.tls=!G.login.tls;G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};}
                 else if(i==2){LOGI("Connect");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
             }else if(G.screen==SCR_CHAT){
-                if(i==0){LOGI("Back");G.login.searchMode=false;G.screen=SCR_SERVER;layoutUI();}
+                if(i==0){LOGI("Back");G.login.searchMode=false;G.ctxMenu=false;G.login.replyTo=-1;G.screen=SCR_SERVER;layoutUI();}
                 else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
                 else if(i==2){G.login.searchMode=!G.login.searchMode;G.login.searchQLen=0;}
+                else if(i==G.nb-1){ /* Send button */
+                    if(G.login.chatInputLen>0){
+                        Room&r=G.rooms[G.activeRoom];
+                        char sendBuf[256];memcpy(sendBuf,G.login.chatInput,G.login.chatInputLen);sendBuf[G.login.chatInputLen]=0;
+                        r.msgs.push_back({strdup("me"),strdup(sendBuf),12,0,0,0});
+                        G.login.chatInputLen=0;G.login.replyTo=-1;
+                        G.sy=0;layoutUI();
+                    }
+                }
             }
         }
     }G.ab=-1;
@@ -988,6 +1114,8 @@ static void tm(float x,float y){
         float dx=x-G.sl;
         if(fabsf(dx)>120.0f){G.login.carouselPage+=(dx>0?-1:1);if(G.login.carouselPage<0)G.login.carouselPage=0;if(G.login.carouselPage>3)G.login.carouselPage=3;G.sl=x;G.login.frameCount=0;}
     }
+    /* Long-press: cancel if moved too much */
+    if(G.sid==3&&(fabsf(x-G.sl)>30.0f||fabsf(y-G.ty)>30.0f)){G.sid=1;G.sl=y;G.sv=0;G.longPressIdx=-1;}
     for(int i=0;i<G.nb;i++)if(i==G.ab)G.btns[i].pressed=hit(x,y,G.btns[i].rect);
 }
 
@@ -1117,6 +1245,7 @@ Java_chat_progressive_app_next_MainActivity_nativeGetFieldText(JNIEnv*env,jclass
     if(field==1){G.login.hsUrl[G.login.hsLen]=0;t=G.login.hsUrl;}
     else if(field==2){G.login.user[G.login.userLen]=0;t=G.login.user;}
     else if(field==3){G.login.pass[G.login.passLen]=0;t=G.login.pass;}
+    else if(field==4){G.login.chatInput[G.login.chatInputLen]=0;t=G.login.chatInput;}
     return env->NewStringUTF(t);
 }
 
@@ -1127,6 +1256,7 @@ Java_chat_progressive_app_next_MainActivity_nativeSetFieldText(JNIEnv*env,jclass
     if(field==1){memcpy(G.login.hsUrl,s,len);G.login.hsLen=len;}
     else if(field==2){memcpy(G.login.user,s,len);G.login.userLen=len;}
     else if(field==3){memcpy(G.login.pass,s,len);G.login.passLen=len;}
+    else if(field==4){if(len>250)len=250;memcpy(G.login.chatInput,s,len);G.login.chatInputLen=len;}
     env->ReleaseStringUTFChars(jtext,s);
 }
 }
