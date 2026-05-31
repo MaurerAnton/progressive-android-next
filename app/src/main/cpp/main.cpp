@@ -424,15 +424,15 @@ static void renderServerSelect(){
     txt(pad+is+12.0f,y+is*0.5f-4.0f,pages[page].title,tsz,Vec4{C_WHITE});
     y+=is+4.0f*G.dp;
 
-    /* Page dots - plain rect, no rounding */
-    rct(0, G.h*0.87f, (float)G.w, 3.0f, Vec4{1,0,0,1});
-    float dotR=7.0f*G.dp,dotGap=14.0f*G.dp;
+    /* Page dots - centered below carousel */
+    float dotR=6.0f*G.dp,dotGap=10.0f*G.dp;
     float dotW=4*(dotR*2+dotGap)-dotGap;
-    float dotX=(G.w-dotW)*0.5f,dotY=G.h*0.885f;
+    float dotX=(G.w-dotW)*0.5f;
     for(int i=0;i<4;i++){
-        rct(dotX+i*(dotR*2+dotGap), dotY, dotR*2, dotR*2,
-            i==page?Vec4{1,1,1,1}:Vec4{0.35f,0.35f,0.42f,1.0f});
+        rct(dotX+i*(dotR*2+dotGap), y, dotR*2, dotR*2,
+            i==page?Vec4{0.36f,0.77f,0.90f,1.0f}:Vec4{0.25f,0.25f,0.32f,1.0f});
     }
+    y+=dotR*2+12.0f*G.dp; /* advance past dots before buttons */
 
     /* Buttons side by side */
     float btnW=fw*0.48f,btnH=36.0f*G.dp;
