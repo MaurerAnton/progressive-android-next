@@ -746,9 +746,9 @@ static void renderMatrixLogin(){
 
     /* Create account link */
     txt((G.w-msr("Create account",14.0f*G.dp))*0.5f,cy+4.0f,"Create account",14.0f*G.dp,Vec4{C_CYAN});
-    G.btns[2].rect={(G.w-msr("Create account",14.0f*G.dp))*0.5f-8.0f,cy-up,msr("Create account",14.0f*G.dp)+16.0f,28.0f};
+    G.btns[2].rect={(G.w-msr("Create account",14.0f*G.dp))*0.5f-8.0f,cy,msr("Create account",14.0f*G.dp)+16.0f,28.0f};
     /* SSO hint */
-    txt((G.w-msr("Or sign in with SSO",11.0f*G.dp))*0.5f,cy-up+44.0f*G.dp,"Or sign in with SSO",11.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Or sign in with SSO",11.0f*G.dp))*0.5f,cy+44.0f*G.dp,"Or sign in with SSO",11.0f*G.dp,Vec4{C_HINT});
     G.btns[2].text=nullptr;G.btns[2].color=Vec4{0,0,0,0};
 
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
