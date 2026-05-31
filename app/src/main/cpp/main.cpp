@@ -1453,7 +1453,7 @@ static void tu(float x,float y){
                     else if(G.login.selProtocol==1)G.screen=SCR_IRC;
                     layoutUI();}
                 else if(i==1){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();}
-                else if(i==2){LOGI("Test");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==2){LOGI("Test");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();gpuCapture();}
                 else if(i==3){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();}
                 else if(i==4){G.login.cat=0;G.login.selProtocol=0;}
                 else if(i==5){G.login.cat=1;G.login.selProtocol=0;}
@@ -1548,7 +1548,7 @@ static void tu(float x,float y){
                     G.prevScreen=G.screen;G.screen=SCR_PROFILE;layoutUI();
                 }
                 else if(i>=2&&i<=6){ /* Room tap */
-                    G.activeRoom=i-2;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();
+                    G.activeRoom=i-2;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();gpuCapture();
                 }
             }
         }

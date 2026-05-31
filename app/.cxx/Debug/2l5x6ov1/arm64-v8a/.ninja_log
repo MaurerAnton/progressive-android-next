@@ -1,17 +1,7 @@
 # ninja log v5
-0	1595	1780263199485043732	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1596	1621	1780263199521710573	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1653	1780263389502598931	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1653	1681	1780263389539265767	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1598	1780263481812803271	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1598	1629	1780263481852803282	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-2	1667	1780263596219542542	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1667	1695	1780263596256209245	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1637	1780263671122964581	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1637	1668	1780263671159631298	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1594	1780263747299749531	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1594	1623	1780263747336416261	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1609	1780263782459812587	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1609	1640	1780263782499812662	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
-3	1786	1780263846393272770	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
-1786	1817	1780263846433272854	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
+3	2181	1780263988436936203	CMakeFiles/progressivenext.dir/markdown.cpp.o	ff3917992a8ded9d
+3	569	1780263986836932160	CMakeFiles/progressivenext.dir/json_parser.cpp.o	6e5632e9b09e5b77
+3	1611	1780263886576693185	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
+1611	1643	1780263886616693274	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
+2	1616	1780264026257033663	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
+1616	1648	1780264026297033768	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
