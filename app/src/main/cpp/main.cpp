@@ -342,8 +342,8 @@ static void renderOnboard(){
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
 static void renderServerSelect(){
-    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f,cardGap=8.0f;
-    float chipH=36.0f;
+    float pad=G.w*0.05f,fw=G.w*0.90f,cardH=66.0f*G.dp,cardGap=8.0f*G.dp;
+    float chipH=36.0f*G.dp;
     float totalH=70.0f+34.0f+28.0f+28.0f+chipH+28.0f+6*(cardH+cardGap)+40.0f;
     float y=G.h*0.04f;
     if(y<G.h*0.02f)y=G.h*0.02f;
@@ -352,7 +352,7 @@ static void renderServerSelect(){
     if(G.texLogo&&G.logoW>0){
         float is=G.w*0.20f; /* icon size */
         sprite((G.w-is)*0.5f,y,is,is,G.texLogo);
-        y+=is+8.0f;
+        y+=is+8.0f*G.dp;
     }
     /* Logotype as text */
     txt((G.w-msr("Progressive Chat",20.0f*G.dp))*0.5f,y,"Progressive Chat",20.0f*G.dp,Vec4{C_TITLE});
@@ -400,9 +400,9 @@ static void renderServerSelect(){
         float alpha=cards[i].dim?0.40f:1.0f;
         rrct(pad,y,fw,cardH,14.0f,Vec4{0.12f*alpha,0.12f*alpha,0.18f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
-        rrct(pad+12.0f,y+10.0f,44.0f,44.0f,14.0f,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
-        txt(pad+64.0f,y+18.0f,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
-        txt(pad+64.0f,y+40.0f,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        rrct(pad+12.0f*G.dp,y+10.0f*G.dp,44.0f*G.dp,44.0f*G.dp,14.0f*G.dp,Vec4{cards[i].accent.r*0.25f*alpha,cards[i].accent.g*0.25f*alpha,cards[i].accent.b*0.25f*alpha,1.0f});
+        txt(pad+64.0f*G.dp,y+18.0f*G.dp,cards[i].title,13.0f*G.dp,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+64.0f*G.dp,y+40.0f*G.dp,cards[i].desc,11.0f*G.dp,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
         if(cards[i].dim)txt(pad+fw-74.0f,y+18.0f,"Soon",10.0f*G.dp,Vec4{C_HINT});
         G.btns[2+i].rect={pad,y,fw,cardH};
         G.btns[2+i].color=cards[i].accent;
@@ -422,12 +422,12 @@ static void renderIrcAuth(){
     btn(G.btns[0],22.0f);
 
     float pad=G.w*0.08f,fw=G.w*0.84f;
-    float fieldH=48.0f,fieldGap=24.0f;
+    float fieldH=48.0f*G.dp,fieldGap=24.0f*G.dp;
     int nFields=4;
     float fieldsTotal=nFields*(fieldH+fieldGap);
-    float tlsH=42.0f,btnH=48.0f;
-    float titleH=44.0f,footerH=24.0f;
-    float cardPad=20.0f;
+    float tlsH=42.0f*G.dp,btnH=48.0f*G.dp;
+    float titleH=44.0f*G.dp,footerH=24.0f*G.dp;
+    float cardPad=20.0f*G.dp;
     float cardH=titleH+fieldsTotal+tlsH+cardPad*2+btnH+24.0f;
     /* Center card vertically */
     float cardY=(G.h-cardH-footerH)*0.35f;
@@ -496,8 +496,8 @@ static void renderMatrixLogin(){
     btn(G.btns[0],22.0f);
 
     float pad=G.w*0.08f,fw=G.w*0.84f;
-    float fieldH=48.0f,fieldGap=20.0f,btnH=46.0f;
-    float cardPad=20.0f,titleH=36.0f;
+    float fieldH=48.0f*G.dp,fieldGap=20.0f*G.dp,btnH=46.0f*G.dp;
+    float cardPad=20.0f*G.dp,titleH=36.0f*G.dp;
     float cardH=titleH+3*(fieldH+fieldGap)+cardPad*2+btnH+56.0f;
     float cardY=(G.h-cardH-30.0f)*0.32f;
     if(cardY<G.h*0.03f)cardY=G.h*0.03f;
