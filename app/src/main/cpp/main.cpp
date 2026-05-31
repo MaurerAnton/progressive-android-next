@@ -960,7 +960,17 @@ static void renderChat(){
     /* Call button */
     rct(G.w-186,78,28,40,Vec4{C_DARK});
     txt(G.w-180,78+26,"*",18.0f*G.dp,Vec4{C_GREEN});
+    /* Unread count badge on back button */
+    if(r.unread>0){
+        char ubc[8];snprintf(ubc,8,"%d",r.unread);
+        float uw=msr(ubc,10.0f*G.dp);
+        rrct(48.0f,80.0f,uw+10.0f,18.0f*G.dp,9.0f,Vec4{C_CYAN});
+        txt(53.0f,80.0f+12.0f*G.dp,ubc,10.0f*G.dp,Vec4{C_WHITE});
+    }
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
+    /* Member count */
+    char memCount[32];snprintf(memCount,32,"%d members",(int)r.msgs.size());
+    txt(120.0f+msr(r.name,16.0f*G.dp)+16.0f,hdrH*0.75f,memCount,10.0f*G.dp,Vec4{C_HINT});
     /* Connection dot */
     Vec4 dotC=Vec4{0.20f,0.72f,0.40f,1.0f}; /* green online */
     if(G.mtxState==MTX_CONNECTING)dotC=Vec4{0.85f,0.75f,0.25f,1.0f}; /* yellow */
