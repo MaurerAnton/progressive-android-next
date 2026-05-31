@@ -859,6 +859,9 @@ static void renderRoomInfo(){
     float pad=G.w*0.08f,fw=G.w*0.84f,y=G.h*0.08f;
     /* Room avatar */
     float ar=G.w*0.12f;rrct((G.w-ar)*0.5f,y,ar,ar,ar*0.5f,Vec4{C_CYAN});
+    /* Room version badge */
+    rrct((G.w+ar)*0.5f+8.0f,y+ar*0.6f,msr("v9",8.0f*G.dp)+10.0f,16.0f*G.dp,4.0f,Vec4{0.30f,0.30f,0.45f,1.0f});
+    txt((G.w+ar)*0.5f+13.0f,y+ar*0.6f+10.0f*G.dp,"v9",8.0f*G.dp,Vec4{C_LABEL});
     txt((G.w-msr("#",ar*0.5f))*0.5f,y+ar*0.55f,"#",ar*0.5f,Vec4{C_WHITE},1.0f);
     y+=ar+16.0f*G.dp;
     txt((G.w-msr(r.name,20.0f*G.dp))*0.5f,y,r.name,20.0f*G.dp,Vec4{C_WHITE});
