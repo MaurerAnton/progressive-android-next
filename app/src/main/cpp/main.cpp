@@ -338,7 +338,12 @@ static void renderOnboard(){
     };
     int nPages=4;
 
-    /* Page indicator dots - centered */
+    /* Carousel image per page */
+    if(G.texCar[page]){
+        float iw=G.w*0.70f,ih=G.w*0.45f,ix=(G.w-iw)*0.5f,iyy=G.h*0.06f;
+        sprite(ix,iyy,iw,ih,G.texCar[page]);
+    }
+    /* Page indicator dots - below image */
     float dotR=4.0f*G.dp,dotGap=12.0f*G.dp,dotW=nPages*(dotR*2+dotGap)-dotGap;
     float dotX=(G.w-dotW)*0.5f,dotY=G.h*0.58f;
     for(int i=0;i<nPages;i++){
@@ -346,13 +351,9 @@ static void renderOnboard(){
             i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
     }
 
-    /* Icon placeholder per page */
-    Vec4 iconC[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
-    float is=G.w*0.26f,iy=G.h*0.12f;
-    rrct((G.w-is)*0.5f,iy,is,is,is*0.22f,iconC[page]);
-
-    /* Title */
-    float ty=iy+is+20.0f*G.dp;
+    /* Title - positioned after carousel image */
+    float imgBot=G.h*0.06f+G.w*0.45f;
+    float ty=imgBot+20.0f*G.dp;
     float tsz=18.0f*G.dp;
     txt((G.w-msr(pages[page].title,tsz))*0.5f,ty,pages[page].title,tsz,Vec4{C_WHITE});
 
