@@ -860,4 +860,26 @@ JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeTouchUp(JNIEnv*,jclass,jfloat x,jfloat y){if(G.init)tu(x,y);}
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeTouchMove(JNIEnv*,jclass,jfloat x,jfloat y){if(G.init)tm(x,y);}
+
+JNIEXPORT jint JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeGetFocusField(JNIEnv*,jclass){return G.login.focusField;}
+
+JNIEXPORT jstring JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeGetFieldText(JNIEnv*env,jclass,jint field){
+    const char* t="";
+    if(field==1){G.login.hsUrl[G.login.hsLen]=0;t=G.login.hsUrl;}
+    else if(field==2){G.login.user[G.login.userLen]=0;t=G.login.user;}
+    else if(field==3){G.login.pass[G.login.passLen]=0;t=G.login.pass;}
+    return env->NewStringUTF(t);
+}
+
+JNIEXPORT void JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeSetFieldText(JNIEnv*env,jclass,jint field,jstring jtext){
+    const char* s=env->GetStringUTFChars(jtext,nullptr);
+    int len=strlen(s);if(len>60)len=60;
+    if(field==1){memcpy(G.login.hsUrl,s,len);G.login.hsLen=len;}
+    else if(field==2){memcpy(G.login.user,s,len);G.login.userLen=len;}
+    else if(field==3){memcpy(G.login.pass,s,len);G.login.passLen=len;}
+    env->ReleaseStringUTFChars(jtext,s);
+}
 }
