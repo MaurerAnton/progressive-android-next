@@ -1105,11 +1105,19 @@ static void renderChat(){
                 if(*p==' '){if(wi>0){word[wi]=0;wi=0;
                     float ww=msr(word,tsz);
                     if(lx+ww>bx+bw-8.0f&&lx>bx+4.0f){ly+=lh;lx=ttx;}
-                    txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);lx+=ww+msr(" ",tsz);
+                    Vec4 wc=Vec4{C_WHITE};
+                    if(word[0]=='@')wc=Vec4{0.95f,0.85f,0.25f,1.0f}; /* mention */
+                    else if(strstr(word,"http"))wc=Vec4{C_CYAN}; /* link */
+                    else if(word[0]=='*'&&word[strlen(word)-1]=='*')wc=Vec4{0.95f,0.95f,1.0f,1.0f}; /* bold */
+                    txt(lx,ly+lh*0.75f,word,tsz,wc,1.05f);lx+=ww+msr(" ",tsz);
                 }else{lx+=msr(" ",tsz);}}else{if(wi<127)word[wi++]=(unsigned char)*p;}p++;}
             if(wi>0){word[wi]=0;float ww=msr(word,tsz);
                 if(lx+ww>bx+bw-8.0f&&lx>bx+4.0f){ly+=lh;lx=ttx;}
-                txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);}
+                Vec4 wc=Vec4{C_WHITE};
+                if(word[0]=='@')wc=Vec4{0.95f,0.85f,0.25f,1.0f};
+                else if(strstr(word,"http"))wc=Vec4{C_CYAN};
+                else if(word[0]=='*'&&word[strlen(word)-1]=='*')wc=Vec4{0.95f,0.95f,1.0f,1.0f};
+                txt(lx,ly+lh*0.75f,word,tsz,wc,1.05f);}
             /* Delivery checkmark for own messages */
             if(m.nick&&strcmp(m.nick,"me")==0){
                 txt(lx+msr(word,tsz)+4.0f,ly+lh*0.75f,"~",10.0f*G.dp,Vec4{C_LABEL});
