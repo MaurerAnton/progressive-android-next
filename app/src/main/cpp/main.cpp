@@ -91,7 +91,7 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;}login;
+    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;char mention[64];int mentionLen;int filterUser;}login;
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -708,6 +708,8 @@ static void renderChat(){
 
     float my=msgTop+8.0f-G.sy;
     for(auto&m:r.msgs){
+        /* Filter: only show messages from profile user if filterUser set */
+        if(G.login.filterUser>0&&(!m.nick||strcmp(m.nick,G.login.profileNick)!=0))continue;
         char ts[16];snprintf(ts,16,"[%02d:%02d]",m.h,m.m);
         txt(6.0f*G.dp,my+lh*0.75f,ts,12.0f*G.dp,Vec4{C_TS},1.0f);
         float tx=6.0f*G.dp+msr(ts,12.0f*G.dp)+4.0f;
@@ -734,7 +736,12 @@ static void renderChat(){
     rct(0,msgBot,(float)G.w,1.0f,Vec4{C_DIVIDER});
     rct(6.0f,msgBot+6.0f,G.w-74.0f,ibH-12.0f,Vec4{C_DARK});
     char hintBuf[128];
-    snprintf(hintBuf,128,"Message #%s",r.name);
+    if(G.login.mentionLen>0){
+        snprintf(hintBuf,128,"%s",G.login.mention);
+        G.login.mentionLen=0; /* clear after showing */
+    }else{
+        snprintf(hintBuf,128,"Message #%s",r.name);
+    }
     txt(14.0f,msgBot+ibH*0.65f,hintBuf,13.0f*G.dp,Vec4{C_HINT});
     if(G.nb>0)btn(G.btns[G.nb-1],13.0f*G.dp);
 
@@ -804,11 +811,30 @@ static void tu(float x,float y){
                 if(i==0){LOGI("Back");G.screen=SCR_MATRIX;layoutUI();}
             }
             else if(G.screen==SCR_PROFILE){
-                if(i==0){LOGI("Back");G.screen=SCR_CHAT;layoutUI();}
-                else if(i==1){LOGI("Send message");G.screen=SCR_CHAT;layoutUI();}
-                else if(i==2){LOGI("View details");}
-                else if(i==3){LOGI("Mention");G.screen=SCR_CHAT;layoutUI();}
-                else if(i==4){LOGI("Block user");G.screen=SCR_CHAT;layoutUI();}
+                if(i==0){G.screen=SCR_CHAT;G.login.filterUser=-1;layoutUI();}
+                else if(i==1){ /* Send message - open DM */
+                    /* Create DM room if not exists */
+                    char dmName[64];snprintf(dmName,64,"@%s",G.login.profileNick);
+                    bool found=false;
+                    for(size_t ri=0;ri<G.rooms.size();ri++){
+                        if(strcmp(G.rooms[ri].name,dmName)==0){G.activeRoom=(int)ri;found=true;break;}
+                    }
+                    if(!found){
+                        Room dm;dm.name=strdup(dmName);dm.topic="Direct message";dm.unread=0;
+                        G.rooms.push_back(dm);G.activeRoom=G.rooms.size()-1;
+                    }
+                    G.login.filterUser=-1;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();
+                }
+                else if(i==2){ /* View details - filter to this user */
+                    G.login.filterUser=G.login.profileNickLen>0?1:0;
+                    G.screen=SCR_CHAT;layoutUI();
+                }
+                else if(i==3){ /* Mention - add to input */
+                    snprintf(G.login.mention,64,"@%s ",G.login.profileNick);
+                    G.login.mentionLen=strlen(G.login.mention);
+                    G.screen=SCR_CHAT;layoutUI();
+                }
+                else if(i==4){G.screen=SCR_CHAT;G.login.filterUser=-1;layoutUI();}
             }
             else if(G.screen==SCR_SETTINGS){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
