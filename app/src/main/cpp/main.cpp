@@ -1112,10 +1112,17 @@ static void td(float x,float y){
             }
             float mh=lh+2.0f;
             if(relY>=cx&&relY<cx+mh){
-                G.longPressIdx=mi;G.sid=3;G.sl=x;
-                if(m.nick){
-                    strncpy(G.login.profileNick,m.nick,31);G.login.profileNick[31]=0;
-                    G.login.profileNickLen=strlen(G.login.profileNick);
+                G.longPressIdx=mi;
+                /* Only open profile if tap is on avatar/nick area (left ~200px) */
+                float nickZoneEnd=6.0f*G.dp+msr("[00:00]",12.0f*G.dp)+4.0f+40.0f*G.dp;
+                if(x<nickZoneEnd+msr(m.nick?m.nick:"",13.0f*G.dp)){
+                    G.sid=3;G.sl=x;
+                    if(m.nick){
+                        strncpy(G.login.profileNick,m.nick,31);G.login.profileNick[31]=0;
+                        G.login.profileNickLen=strlen(G.login.profileNick);
+                    }
+                }else{
+                    G.sid=0; /* tap on message text - no profile, no swipe */
                 }
                 return;
             }
