@@ -82,7 +82,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -91,7 +91,7 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR,texLogo,texCar[4];
     GLint uMVP,uTex,uColor,uSmooth,uIsTex,uIsRGBA;
     Screen screen;
-    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;}login;
+    struct{bool tls;int cat;int carouselPage;int frameCount;int focusField;char hsUrl[64];char user[64];char pass[64];int hsLen,userLen,passLen;char profileNick[32];int profileNickLen;}login;
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -262,6 +262,8 @@ static void layoutUI(){
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
+        case SCR_PROFILE: G.nb=5; break; /* back + 4 action buttons */
+        case SCR_SETTINGS: G.nb=2; break; /* back + about */
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(6,6,42,42,"<",Vec4{C_DARK}); /* back */
             G.btns[G.nb++]=mkB(52,6,42,42,"#",Vec4{C_DARK}); /* drawer toggle */
@@ -670,6 +672,13 @@ static void renderChat(){
         if(!m.nick)txt(tx,my+lh*0.75f,m.text,12.0f*G.dp,Vec4{C_SYSMSG},1.0f);
         else{
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
+            /* Avatar circle */
+            float ax=tx-2.0f,ay=my+lh*0.3f,ar=lh*0.35f;
+            rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
+            /* Initial letter */
+            char init[2]={(char)m.nick[0],0};
+            txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
+            tx=ax+ar*2+6.0f;
             txt(tx,my+lh*0.75f,m.nick,13.0f*G.dp,nc,1.05f);
             tx+=msr(m.nick,13.0f*G.dp)+4.0f;
             txt(tx,my+lh*0.75f,m.text,13.0f*G.dp,Vec4{C_WHITE},1.05f);
