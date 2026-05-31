@@ -83,7 +83,7 @@ struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
 struct Message{const char*nick,*text;int h,m;int ci;char type;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
-enum Screen{SCR_ONBOARD,SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHATLIST,SCR_CHAT};
+enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHATLIST,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
 
 static struct{
@@ -305,7 +305,6 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_ONBOARD: G.nb=3; break; /* sign in + create + test */
         case SCR_SERVER: G.nb=12; break; /* 3 buttons + settings + 2 chips + 6 cards */
         case SCR_MATRIX: G.nb=6; break; /* back + sign in + create + 3 fields */
         case SCR_SIGNUP: G.nb=4; break; /* back + 3 fields (user/pass/confirm) */
@@ -479,10 +478,42 @@ static void renderServerSelect(){
         y+=h+cardGap;
     }
 
+    /* === ONBOARDING CAROUSEL (compact, between cards and buttons) === */
+    y+=4.0f*G.dp;
+    const char*carTitles[]={"Own your conversations.","You're in control.","Secure messaging.","Messaging for your team."};
+    const char*carBodies[]={
+        "Same privacy as a face-to-face conversation.",
+        "Choose where your conversations are kept. Matrix.",
+        "No phone number required. No ads, no tracking.",
+        "Trusted by the world's most secure organisations."
+    };
+    float carH=56.0f*G.dp;
+    rrct(pad,y,fw,carH,14.0f,Vec4{0.13f,0.13f,0.20f,1.0f});
+    /* Carousel image (small, left side) */
+    if(G.texCar[page]){
+        float cis=carH*0.65f;
+        sprite(pad+12.0f*G.dp,y+(carH-cis)*0.5f,cis,cis,G.texCar[page]);
+    }
+    /* Text (right of image) */
+    float ctx=pad+carH*0.70f+20.0f*G.dp;
+    txt(ctx,y+carH*0.25f,carTitles[page],12.0f*G.dp,Vec4{C_TITLE});
+    float bw=G.w-ctx-pad-8.0f;
+    /* Simple body - no word wrap, truncate */
+    char bodyBuf[80];snprintf(bodyBuf,80,"%.52s",carBodies[page]);
+    txt(ctx,y+carH*0.65f,bodyBuf,10.0f*G.dp,Vec4{C_LABEL});
+    /* Dots at bottom of carousel */
+    int nPages=4;float dotR=3.0f*G.dp,dotGap=10.0f*G.dp;
+    float dotW2=nPages*(dotR*2+dotGap)-dotGap;
+    float dotX2=pad+fw-dotW2-8.0f*G.dp,dotY2=y+carH-dotR*2-4.0f*G.dp;
+    for(int i=0;i<nPages;i++){
+        rrct(dotX2+i*(dotR*2+dotGap),dotY2,dotR*2,dotR*2,dotR,
+            i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
+    }
+    y+=carH+4.0f*G.dp;
+
     /* === BOTTOM BUTTONS === */
-    y+=16.0f*G.dp;
     rct(pad,y,fw,1.0f,Vec4{C_DIVIDER});
-    y+=16.0f*G.dp;
+    y+=8.0f*G.dp;
 
     float btnW=fw*0.48f,btnH=36.0f*G.dp;
     G.btns[0].rect={pad,y,btnW,btnH};G.btns[0].text="Sign In";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],12.0f*G.dp);
@@ -780,7 +811,9 @@ static void renderChatList(){
     /* Header */
     float hdrH=50.0f*G.dp;
     rct(0,0,(float)G.w,hdrH,Vec4{C_DARK});
-    txt(pad,hdrH*0.65f,"Chats",18.0f*G.dp,Vec4{C_WHITE});
+    /* Back button */
+    G.btns[7].rect={8.0f,8.0f,50.0f,40.0f};G.btns[7].text="<";G.btns[7].color=Vec4{C_DARK};btn(G.btns[7],14.0f*G.dp);
+    txt(pad+50.0f,hdrH*0.65f,"Chats",18.0f*G.dp,Vec4{C_WHITE});
     /* Search button */
     G.btns[0].rect={G.w-100.0f,8.0f,40.0f,40.0f};G.btns[0].text="Q";G.btns[0].color=Vec4{C_DARK};btn(G.btns[0],14.0f*G.dp);
     /* Settings button */
@@ -824,7 +857,7 @@ static void renderChatList(){
     /* Profile button at bottom */
     float btnH=36.0f*G.dp;
     float by=G.h-btnH-30.0f*G.dp;
-    G.btns[7].rect={pad,by,fw,btnH};
+    G.btns[8].rect={pad,by,fw,btnH};
     rct(pad,by,fw,btnH,Vec4{C_DARK});
     txt(pad+(fw-msr("Profile",13.0f*G.dp))*0.5f,by+btnH*0.65f,"Profile",13.0f*G.dp,Vec4{C_CYAN});
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-20.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
@@ -1008,7 +1041,7 @@ static void renderChat(){
 
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
-    switch(G.screen){case SCR_ONBOARD:renderOnboard();break;case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_ROOMINFO:renderRoomInfo();break;case SCR_CHATLIST:renderChatList();break;case SCR_CHAT:renderChat();break;}
+    switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_ROOMINFO:renderRoomInfo();break;case SCR_CHATLIST:renderChatList();break;case SCR_CHAT:renderChat();break;}
 }
 
 /* ====== TOUCH ====== */
@@ -1112,10 +1145,7 @@ static void tu(float x,float y){
     G.sid=0;
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
-            if(G.screen==SCR_ONBOARD){
-                if(i==0||i==1||i==2){G.screen=SCR_SERVER;layoutUI();}
-            }
-            else if(G.screen==SCR_SERVER){
+            if(G.screen==SCR_SERVER){
                 if(i==0){LOGI("Sign In");
                     if(G.login.selProtocol==0)G.screen=SCR_MATRIX;
                     else if(G.login.selProtocol==1)G.screen=SCR_IRC;
@@ -1192,9 +1222,10 @@ static void tu(float x,float y){
                     }
                 }
             }else if(G.screen==SCR_CHATLIST){
-                if(i==0){LOGI("Search");G.login.searchMode=true;G.login.searchQLen=0;G.screen=SCR_CHAT;layoutUI();}
+                if(i==7){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                else if(i==0){LOGI("Search");G.login.searchMode=true;G.login.searchQLen=0;G.screen=SCR_CHAT;layoutUI();}
                 else if(i==1){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();}
-                else if(i==7){ /* Profile */
+                else if(i==8){ /* Profile */
                     snprintf(G.login.profileNick,32,"me");G.login.profileNickLen=2;
                     G.prevScreen=G.screen;G.screen=SCR_PROFILE;layoutUI();
                 }
@@ -1301,7 +1332,7 @@ static bool initGL(JNIEnv*env,jobject am){
     glViewport(0,0,G.w,G.h);
     G.dp=(float)G.w/411.0f; /* density scale: 1080px/411dp = 2.63 */
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
-    genData();G.screen=SCR_ONBOARD;G.ds=DS_CLOSED;layoutUI();G.init=true;
+    genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
 }
 
@@ -1319,7 +1350,7 @@ JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
     if(G.init){
         /* Auto-switch carousel every ~5s (300 frames at 60fps) */
-        if(G.screen==SCR_ONBOARD&&++G.login.frameCount>300){
+        if(G.screen==SCR_SERVER&&++G.login.frameCount>300){
             G.login.carouselPage=(G.login.carouselPage+1)%4;
             G.login.frameCount=0;
         }
