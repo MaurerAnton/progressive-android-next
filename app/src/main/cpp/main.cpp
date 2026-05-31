@@ -865,7 +865,10 @@ static void renderRoomInfo(){
     y+=ar+16.0f*G.dp;
     txt((G.w-msr(r.name,20.0f*G.dp))*0.5f,y,r.name,20.0f*G.dp,Vec4{C_WHITE});
     y+=28.0f*G.dp;
-    if(r.topic){txt((G.w-msr(r.topic,12.0f*G.dp))*0.5f,y,r.topic,12.0f*G.dp,Vec4{C_LABEL});y+=22.0f*G.dp;}
+    if(r.topic){
+        char ts[80];snprintf(ts,80,"%.70s",r.topic);
+        txt((G.w-msr(ts,12.0f*G.dp))*0.5f,y,ts,12.0f*G.dp,Vec4{C_LABEL});y+=22.0f*G.dp;
+    }
     y+=16.0f*G.dp;
     rct(pad,y,fw,1,Vec4{C_DIVIDER});y+=16.0f*G.dp;
     /* Info */
