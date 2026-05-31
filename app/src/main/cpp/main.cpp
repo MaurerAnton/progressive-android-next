@@ -348,19 +348,19 @@ static void renderServerSelect(){
 
     /* Fixed layout: each section has absolute Y boundaries to prevent overlap */
     float y1=G.h*0.010f;                                /* logo top */
-    float y2=G.h*0.085f;                                /* title */
-    float y3=G.h*0.130f;                                /* protocol subtitle */
-    float y4=G.h*0.165f;                                /* chips */
+    float y2=G.h*0.130f;                                /* title */
+    float y3=G.h*0.175f;                                /* protocol subtitle */
+    float y4=G.h*0.215f;                                /* chips */
     float y5=y4+chipH+12.0f*G.dp;                       /* description */
     float y6=y5+20.0f*G.dp;                             /* cards start */
-    float y7=G.h*0.780f;                                /* onboarding divider */
+    float y7=G.h*0.770f;                                /* onboarding divider */
     float y8=y7+16.0f*G.dp;                             /* carousel */
     float y9=y8+G.w*0.12f+30.0f*G.dp;                   /* dots */
     float yA=y9+30.0f*G.dp;                             /* buttons */
 
     /* === LOGO + PROTOCOL SELECTION (top) === */
     if(G.texLogo&&G.logoW>0){
-        float is=G.w*0.20f;
+        float is=G.w*0.13f;
         sprite((G.w-is)*0.5f,y1,is,is,G.texLogo);
     }
     txt((G.w-msr("Progressive Chat",20.0f*G.dp))*0.5f,y2,"Progressive Chat",20.0f*G.dp,Vec4{C_TITLE});
