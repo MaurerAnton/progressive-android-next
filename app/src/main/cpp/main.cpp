@@ -932,8 +932,12 @@ static void frame(){
 /* ====== TOUCH ====== */
 static void td(float x,float y){
     G.tx=x;G.ty=y;G.touching=true;G.tdTime=(float)clock()/(float)CLOCKS_PER_SEC;
-    /* Dismiss context menu on tap */
-    if(G.ctxMenu){G.ctxMenu=false;return;}
+    /* Context menu: check if tap hits a menu item */
+    if(G.ctxMenu){
+        int h=hitB(x,y);
+        if(h>=11&&h<=14){G.btns[h].pressed=true;G.ab=h;return;}
+        G.ctxMenu=false;return;
+    }
     /* Reply close button */
     if(G.screen==SCR_CHAT&&G.login.replyTo>=0){
         float ry=G.h-44.0f*G.dp-(40.0f*G.dp)+24.0f*G.dp;
