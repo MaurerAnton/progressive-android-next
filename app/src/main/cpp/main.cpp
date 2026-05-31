@@ -86,7 +86,7 @@ static struct{
     GLuint prog,tex,vboG,vboR,vaoG,vaoR;
     GLint uMVP,uTex,uColor,uSmooth,uIsTex;
     Screen screen;
-    struct{bool tls;}login;
+    struct{bool tls;int cat;}login; /* cat: 0=open source, 1=proprietary */
     int activeRoom;float sy,sv,ms;
     int sid;float sl;
     DrawerState ds;float dx,dw;
@@ -274,28 +274,40 @@ static void renderServerSelect(){
 
     /* Category chips */
     float chipW=fw*0.5f-5.0f;
-    rrct(pad,y,chipW,chipH,chipH/2,Vec4{0.20f,0.20f,0.28f,1.0f});
-    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",14.0f,Vec4{C_WHITE});
+    bool openSrc=(G.login.cat==0);
+    rrct(pad,y,chipW,chipH,chipH/2,openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
+    txt(pad+chipW*0.15f,y+chipH*0.32f+5.0f,"Open source",14.0f,openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[0].rect={pad,y,chipW,chipH};
 
-    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,Vec4{0.10f,0.10f,0.15f,1.0f});
-    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",14.0f,Vec4{C_LABEL});
+    rrct(pad+chipW+10.0f,y,chipW,chipH,chipH/2,!openSrc?Vec4{0.20f,0.20f,0.28f,1.0f}:Vec4{0.10f,0.10f,0.15f,1.0f});
+    txt(pad+chipW+10.0f+chipW*0.2f,y+chipH*0.32f+5.0f,"Proprietary",14.0f,!openSrc?Vec4{C_WHITE}:Vec4{C_LABEL});
     G.btns[1].rect={pad+chipW+10.0f,y,chipW,chipH};
     y+=chipH+12.0f;
 
-    txt(pad+4.0f,y,"Decentralized, fully open and free.",13.0f,Vec4{C_HINT});
+    txt(pad+4.0f,y,openSrc?"Decentralized, fully open and free.":"Popular platforms with closed-source servers.",13.0f,Vec4{C_HINT});
     y+=28.0f;
 
     /* Protocol cards */
-    struct{const char*title,*desc;Vec4 accent;bool dim;}cards[]={
+    struct Card{const char*title,*desc;Vec4 accent;bool dim;};
+    Card openCards[]={
         {"Matrix","Modern messenger with E2E encryption",Vec4{C_CYAN},false},
         {"IRC","Lightweight classic for old-school hackers",Vec4{C_GREEN},false},
         {"XMPP","Federated instant messaging since 1999",Vec4{C_PURPLE},true},
         {"Delta Chat","Chat over email - no new account needed",Vec4{0.40f,0.55f,0.80f,1.0f},true},
         {"Lemmy","Decentralized link aggregator",Vec4{0.80f,0.65f,0.30f,1.0f},true},
-        {"Reddit","The front page of the internet",Vec4{0.88f,0.45f,0.30f,1.0f},true},
+        {"Mastodon","Decentralized microblogging",Vec4{0.50f,0.45f,0.85f,1.0f},true},
     };
-    for(int i=0;i<6;i++){
+    Card propCards[]={
+        {"Telegram","Popular messenger with closed-source server",Vec4{0.30f,0.65f,0.90f,1.0f},true},
+        {"Reddit","The front page of the internet",Vec4{0.88f,0.45f,0.30f,1.0f},true},
+        {"WhatsApp","End-to-end encrypted messaging",Vec4{0.25f,0.70f,0.45f,1.0f},true},
+        {"Discord","Community chat platform",Vec4{0.45f,0.50f,0.85f,1.0f},true},
+        {"Slack","Team collaboration hub",Vec4{0.65f,0.30f,0.70f,1.0f},true},
+        {"Signal","Private messenger, open protocol",Vec4{0.35f,0.55f,0.85f,1.0f},true},
+    };
+    int nCards=6;
+    Card* cards=openSrc?openCards:propCards;
+    for(int i=0;i<nCards;i++){
         float alpha=cards[i].dim?0.40f:1.0f;
         rrct(pad,y,fw,cardH,14.0f,Vec4{0.12f*alpha,0.12f*alpha,0.18f*alpha,1.0f});
         rct(pad,y,4.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
@@ -531,8 +543,8 @@ static void tu(float x,float y){
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
             if(G.screen==SCR_SERVER){
-                if(i==0){LOGI("Open source chip");}
-                else if(i==1){LOGI("Proprietary chip");}
+                if(i==0){G.login.cat=0;LOGI("Open source");}
+                else if(i==1){G.login.cat=1;LOGI("Proprietary");}
                 else if(i==2){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
                 else if(i==3){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
                 /* 4-7 are dimmed coming-soon cards, no action */
