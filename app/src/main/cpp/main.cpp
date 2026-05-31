@@ -259,6 +259,8 @@ static void genData(){
     /* #welcome: 160 messages */
     Room rw;rw.name=strdup(rn[0]);rw.topic=rt[0];rw.unread=2;
     rw.msgs.push_back({nullptr,strdup("--> alice joined #welcome"),9,5,0,0});
+    /* Add a long message to test word wrap */
+    rw.msgs.push_back({strdup("alice"),strdup("This is a very long message that should wrap across multiple lines to demonstrate the word wrap functionality in the chat renderer properly"),9,6,0,0});
     for(int i=0;i<159;i++){
         int ni=i%10;int ti=i%(sizeof(texts)/sizeof(texts[0]));
         char tp=0;const char*txt=texts[ti];
@@ -946,12 +948,25 @@ static void renderChat(){
             if(!match)continue;
         }
         int nLines=1;
-        if(m.text){
-            float cx=msgX,wid=msgMaxW-(m.nick?msr(m.nick,tsz)+4.0f+35.0f:0);
-            float lx=cx;
-            for(const char*p=m.text;*p;p++){
-                lx+=kGlyphs[(*p>=32&&*p<=126)?*p-32:0].advance*tsz*1.15f;
-                if(lx>cx+wid&&(*p==' '||*p==','||*p=='.')){nLines++;lx=cx;}
+        if(m.text&&m.nick){
+            float txStart=msgX+40.0f*G.dp+msr(m.nick,tsz)+4.0f;
+            float textW=msgMaxW-txStart+2.0f*G.dp;
+            float lx=txStart;
+            const char*p=m.text;
+            char wbuf[128];int wi=0;
+            while(*p){
+                if(*p==' '){
+                    if(wi>0){wbuf[wi]=0;wi=0;
+                        float ww=msr(wbuf,tsz);
+                        if(lx+ww>txStart+textW&&lx>txStart+2.0f){nLines++;lx=txStart;}
+                        lx+=ww+msr(" ",tsz);
+                    }else{lx+=msr(" ",tsz);}
+                }else{if(wi<127)wbuf[wi++]=(unsigned char)*p;}
+                p++;
+            }
+            if(wi>0){wbuf[wi]=0;
+                float ww=msr(wbuf,tsz);
+                if(lx+ww>txStart+textW&&lx>txStart+2.0f)nLines++;
             }
         }
         float mh=nLines*lh+2.0f;
@@ -987,7 +1002,29 @@ static void renderChat(){
             if(m.type>0){txt(tx,my+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);tx+=msr(tpref,10.0f*G.dp);}
             txt(tx,my+lh*0.75f,m.nick,tsz,nc,1.05f);
             tx+=msr(m.nick,tsz)+4.0f;
-            txt(tx,my+lh*0.75f,m.text,tsz,Vec4{C_WHITE},1.05f);
+            /* Word-wrap text across multiple lines */
+            float textW=msgMaxW-tx+2.0f*G.dp;
+            float lx=tx,ly=my;
+            const char*p=m.text;
+            char word[128];int wi=0;
+            while(*p){
+                if(*p==' '){
+                    if(wi>0){word[wi]=0;wi=0;
+                        float ww=msr(word,tsz);
+                        if(lx+ww>tx+textW&&lx>tx+2.0f){ly+=lh;lx=tx;}
+                        txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);
+                        lx+=ww+msr(" ",tsz);
+                    }else{lx+=msr(" ",tsz);}
+                }else{
+                    if(wi<127)word[wi++]=(unsigned char)*p;
+                }
+                p++;
+            }
+            if(wi>0){word[wi]=0;
+                float ww=msr(word,tsz);
+                if(lx+ww>tx+textW&&lx>tx+2.0f){ly+=lh;lx=tx;}
+                txt(lx,ly+lh*0.75f,word,tsz,Vec4{C_WHITE},1.05f);
+            }
         }
     }
     glDisable(GL_SCISSOR_TEST);
@@ -1112,17 +1149,15 @@ static void td(float x,float y){
             }
             float mh=lh+2.0f;
             if(relY>=cx&&relY<cx+mh){
-                G.longPressIdx=mi;
-                /* Only open profile if tap is on avatar/nick area (left ~200px) */
+                G.longPressIdx=mi;G.sid=3;G.sl=x; /* always mark for long-press */
+                /* Check nick zone for profile opening */
                 float nickZoneEnd=6.0f*G.dp+msr("[00:00]",12.0f*G.dp)+4.0f+40.0f*G.dp;
-                if(x<nickZoneEnd+msr(m.nick?m.nick:"",13.0f*G.dp)){
-                    G.sid=3;G.sl=x;
-                    if(m.nick){
-                        strncpy(G.login.profileNick,m.nick,31);G.login.profileNick[31]=0;
-                        G.login.profileNickLen=strlen(G.login.profileNick);
-                    }
+                bool inNickZone=x<nickZoneEnd+msr(m.nick?m.nick:"",13.0f*G.dp);
+                if(m.nick&&inNickZone){
+                    strncpy(G.login.profileNick,m.nick,31);G.login.profileNick[31]=0;
+                    G.login.profileNickLen=strlen(G.login.profileNick);
                 }else{
-                    G.sid=0; /* tap on message text - no profile, no swipe */
+                    G.login.profileNickLen=0; /* not in nick zone - no profile */
                 }
                 return;
             }
@@ -1146,11 +1181,13 @@ static void tu(float x,float y){
     if(wasLong&&G.longPressIdx>=0){
         G.ctxMenu=true;G.ctxMX=x;G.ctxMY=y;G.sid=0;return;
     }
-    /* Short tap on message -> profile */
+    /* Short tap on message -> profile (only if in nick zone) */
     if(G.sid==3&&!wasLong&&G.longPressIdx>=0){
-        Room&r=G.rooms[G.activeRoom];
-        if(G.longPressIdx<(int)r.msgs.size()&&r.msgs[G.longPressIdx].nick){
-            G.screen=SCR_PROFILE;layoutUI();G.sid=0;return;
+        if(G.login.profileNickLen>0){
+            Room&r=G.rooms[G.activeRoom];
+            if(G.longPressIdx<(int)r.msgs.size()&&r.msgs[G.longPressIdx].nick){
+                G.screen=SCR_PROFILE;layoutUI();G.sid=0;return;
+            }
         }
         G.sid=0;
     }
