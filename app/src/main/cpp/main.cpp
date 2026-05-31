@@ -89,7 +89,7 @@ struct Button { Rect rect; const char* text; Vec4 color; bool pressed; };
 struct GlyphVertex { float px,py,tx,ty; };
 
 struct Message {
-    const char* nick;
+    const char* nick;     /* nullptr = system message */
     const char* text;
     int hour, minute;
     int nickColorIdx;
@@ -104,7 +104,6 @@ struct Room {
 
 enum Screen { SCR_LOGIN, SCR_CHAT };
 enum DrawerState { DRAWER_CLOSED, DRAWER_OPEN, DRAWER_ANIM };
-#define DRAWER_W 280.0f
 
 /* ======== GLOBAL STATE ======== */
 static struct {
@@ -130,7 +129,8 @@ static struct {
 
     /* Drawer */
     DrawerState drawer;
-    float drawerX; /* 0=closed, drawerWidth=open */
+    float drawerX; /* 0=closed, drawerW=open */
+    float drawerW; /* computed from screen width */
 
     /* Buttons */
     Button btns[8];
@@ -272,22 +272,26 @@ static void genMockData() {
         "Development discussion | C++ / OpenGL / Matrix",
         "Matrix protocol discussion and bridge testing"
     };
-    struct { const char* n; const char* t; int h, m; } msgs[][6] = {
+    struct { const char* n; const char* t; int h, m; } msgs[][8] = {
         {{"ServerBot","Welcome to #welcome! Please read /topic.",9,5},
+         {nullptr,"--> alice (~alice@matrix) has joined #welcome",9,6},
          {"alice","hello everyone!",9,6},
+         {nullptr,"--> bob (~bob@matrix) has joined #welcome",9,7},
          {"bob","hey alice, how's it going?",9,7},
+         {nullptr,"--> charlie (~charlie@irc) has joined #welcome",9,9},
          {"alice","pretty good! working on the new renderer",9,8},
-         {"charlie","what renderer are you using?",9,10},
-         {"alice","pure OpenGL ES with SDF fonts. no JVM UI at all!",9,12}},
+         {"charlie","what renderer are you using?",9,10}},
         {{"ServerBot","Channel #general created",10,0},
+         {nullptr,"--> dave (~dave@matrix) has joined #general",10,14},
          {"dave","anyone here?",10,15},
          {"eve","yep, just lurking",10,16},
-         {"dave","cool. what's everyone working on?",10,17}},
+         {nullptr,"<-- frank (~frank@irc) has left #general",10,18}},
         {{"frank","lol check this out https://example.com",11,20},
          {"grace","haha that's amazing",11,21},
          {"heidi","i don't get it",11,22},
          {"frank","you had to be there",11,23}},
         {{"ivan","pushed a new commit to the renderer",14,0},
+         {nullptr,"--> judy (~judy@dev) has joined #dev",14,1},
          {"judy","nice! SDF fonts looking crisp?",14,2},
          {"ivan","yeah, the smoothstep AA is working great now",14,3},
          {"karen","can we use this for the main app?",14,5},
@@ -303,7 +307,7 @@ static void genMockData() {
         r.name = rnames[ri];
         r.topic = rtopics[ri];
         r.unread = (ri < 3) ? 2 : 0;
-        int msgCount = (ri == 0) ? 6 : (ri == 3) ? 5 : 4;
+        int msgCount = (ri == 0) ? 8 : (ri == 1) ? 5 : (ri == 3) ? 6 : 4;
         for (int mi = 0; mi < msgCount; mi++) {
             Message m;
             m.nick = msgs[ri][mi].n;
@@ -311,9 +315,13 @@ static void genMockData() {
             m.hour = msgs[ri][mi].h;
             m.minute = msgs[ri][mi].m;
             /* Hash nickname to color index */
-            unsigned h = 0;
-            for (const char* p = m.nick; *p; p++) h = h*31 + *p;
-            m.nickColorIdx = h % 16;
+            if (m.nick) {
+                unsigned h = 0;
+                for (const char* p = m.nick; *p; p++) h = h*31 + *p;
+                m.nickColorIdx = h % 16;
+            } else {
+                m.nickColorIdx = 0;
+            }
             r.msgs.push_back(m);
         }
         G.rooms.push_back(r);
@@ -351,7 +359,7 @@ static void layoutUI() {
             /* Room items in drawer */
             float dy = 60.0f;
             for (size_t i = 0; i < G.rooms.size(); i++) {
-                G.btns[G.nBtns++] = mkBtn(0, dy, DRAWER_W, 44, G.rooms[i].name,
+                G.btns[G.nBtns++] = mkBtn(0, dy, G.drawerW, 44, G.rooms[i].name,
                     i == (size_t)G.activeRoom ? Vec4{C_ROOM_SEL} : Vec4{0,0,0,0});
                 dy += 48.0f;
             }
@@ -387,40 +395,44 @@ static void renderLogin() {
     field("Password:", "********", "");
 
     /* TLS toggle */
+    G.btns[G.nBtns-2].rect.y = y;
+    G.btns[G.nBtns-2].rect.x = cx;
     text(cx, y, "TLS", 20.0f, Vec4{C_WHITE});
     text(cx + 70.0f, y + 4.0f, G.loginForm.tls ? "[ON]" : "[OFF]", 16.0f,
         G.loginForm.tls ? Vec4{C_TOGGLE_ON} : Vec4{C_LABEL});
+    rect(cx, y, 60.0f, 32.0f, G.btns[G.nBtns-2].pressed ? Vec4{C_BTN_PR} : G.btns[G.nBtns-2].color);
     y += 48.0f;
 
-    for (int i = 0; i < G.nBtns; i++) {
-        if (i == G.nBtns - 1) btn(G.btns[i], 22.0f); /* Connect */
-        else rect(G.btns[i].rect.x, G.btns[i].rect.y, G.btns[i].rect.w, G.btns[i].rect.h,
-            G.btns[i].pressed ? Vec4{C_BTN_PR} : G.btns[i].color); /* TLS toggle */
-    }
+    /* Connect button */
+    G.btns[G.nBtns-1].rect.y = y;
+    G.btns[G.nBtns-1].rect.x = cx;
+    G.btns[G.nBtns-1].rect.w = cw;
+    G.btns[G.nBtns-1].rect.h = 52.0f;
+    btn(G.btns[G.nBtns-1], 22.0f);
 }
 
 /* ======== RENDER: CHAT ======== */
 static void renderDrawer() {
     if (G.drawer == DRAWER_CLOSED && G.drawerX < 1.0f) return;
 
-    float dx = -DRAWER_W + G.drawerX;
+    float dx = -G.drawerW + G.drawerX;
     /* Drawer background */
-    rect(dx, 0, DRAWER_W, (float)G.h, Vec4{C_DRAWER});
+    rect(dx, 0, G.drawerW, (float)G.h, Vec4{C_DRAWER});
     /* Header */
     text(dx + 12, 40, "Rooms", 22.0f, Vec4{C_TITLE});
-    rect(dx, 54, DRAWER_W, 1.0f, Vec4{0.2f,0.22f,0.28f,1.0f});
+    rect(dx, 54, G.drawerW, 1.0f, Vec4{0.2f,0.22f,0.28f,1.0f});
 
     /* Room list */
     float y = 64.0f;
     for (size_t i = 0; i < G.rooms.size(); i++) {
         bool sel = (int)i == G.activeRoom;
-        if (sel) rect(dx, y, DRAWER_W, 44.0f, Vec4{C_ROOM_SEL});
+        if (sel) rect(dx, y, G.drawerW, 44.0f, Vec4{C_ROOM_SEL});
         text(dx + 12, y + 28, G.rooms[i].name, 18.0f, sel ? Vec4{C_WHITE} : Vec4{C_LABEL});
         if (G.rooms[i].unread > 0) {
             char ub[8]; snprintf(ub, 8, "%d", G.rooms[i].unread);
             float uw = measure(ub, 14.0f);
-            rect(dx + DRAWER_W - uw - 24.0f, y + 14, uw + 16.0f, 20.0f, Vec4{C_CYAN});
-            text(dx + DRAWER_W - uw - 16.0f, y + 28, ub, 14.0f, Vec4{C_WHITE});
+            rect(dx + G.drawerW - uw - 24.0f, y + 14, uw + 16.0f, 20.0f, Vec4{C_CYAN});
+            text(dx + G.drawerW - uw - 16.0f, y + 28, ub, 14.0f, Vec4{C_WHITE});
         }
         y += 48.0f;
     }
@@ -471,17 +483,21 @@ static void renderChat() {
 
     float my = msgTop + 8.0f - G.scrollY;
     for (auto& m : room.msgs) {
-        /* Timestamp */
         char ts[16]; snprintf(ts, 16, "[%02d:%02d]", m.hour, m.minute);
         text(8, my + 15, ts, 14.0f, Vec4{C_TIMESTAMP}, 1.0f);
         float tx = 8 + measure(ts, 14.0f) + 6.0f;
-        /* Nickname */
-        Vec4 nc = {kNicks[m.nickColorIdx][0], kNicks[m.nickColorIdx][1],
-                   kNicks[m.nickColorIdx][2], 1.0f};
-        text(tx, my + 15, m.nick, 15.0f, nc, 1.05f);
-        tx += measure(m.nick, 15.0f) + 6.0f;
-        /* Message text */
-        text(tx, my + 15, m.text, 15.0f, Vec4{C_WHITE}, 1.05f);
+
+        if (!m.nick) {
+            /* System message */
+            text(tx, my + 15, m.text, 14.0f, Vec4{0.45f,0.50f,0.35f,1.0f}, 1.0f);
+        } else {
+            /* Normal message */
+            Vec4 nc = {kNicks[m.nickColorIdx][0], kNicks[m.nickColorIdx][1],
+                       kNicks[m.nickColorIdx][2], 1.0f};
+            text(tx, my + 15, m.nick, 15.0f, nc, 1.05f);
+            tx += measure(m.nick, 15.0f) + 6.0f;
+            text(tx, my + 15, m.text, 15.0f, Vec4{C_WHITE}, 1.05f);
+        }
         my += lineH;
     }
     glDisable(GL_SCISSOR_TEST);
@@ -497,7 +513,7 @@ static void renderChat() {
 
     /* Drawer overlay */
     if (G.drawer != DRAWER_CLOSED) {
-        float alpha = G.drawerX / DRAWER_W * 0.5f;
+        float alpha = G.drawerX / G.drawerW * 0.5f;
         rect(0, 0, (float)G.w, (float)G.h, Vec4{0,0,0,alpha});
         renderDrawer();
     }
@@ -516,7 +532,7 @@ static void renderFrame() {
 static void doDown(float x, float y) {
     G.tx = x; G.ty = y; G.touching = true;
     /* Check drawer area first */
-    if (G.screen == SCR_CHAT && G.drawer == DRAWER_OPEN && x < DRAWER_W) {
+    if (G.screen == SCR_CHAT && G.drawer == DRAWER_OPEN && x < G.drawerW) {
         int hit = hitBtn(x, y);
         if (hit == 0) { G.drawer = DRAWER_ANIM; } /* hamburger */
         else if (hit > 0 && hit <= (int)G.rooms.size()) {
@@ -535,7 +551,7 @@ static void doDown(float x, float y) {
         return;
     }
     /* Start scroll tracking */
-    if (G.screen == SCR_CHAT && x > DRAWER_W) {
+    if (G.screen == SCR_CHAT && x > G.drawerW) {
         G.scrollTrackId = 1;
         G.scrollLastY = y;
         G.scrollVel = 0;
@@ -566,7 +582,7 @@ static void doUp(float x, float y) {
                 } else if (G.screen == SCR_CHAT) {
                     if (i == 0) { /* Hamburger */
                         G.drawer = (G.drawer == DRAWER_CLOSED) ? DRAWER_OPEN : DRAWER_CLOSED;
-                        G.drawerX = (G.drawer == DRAWER_OPEN) ? DRAWER_W : 0;
+                        G.drawerX = (G.drawer == DRAWER_OPEN) ? G.drawerW : 0;
                     } else if (i == G.nBtns - 1) { /* Send */
                         LOGI("Send pressed");
                     }
@@ -641,6 +657,8 @@ static bool initGL(JNIEnv* env, jobject am) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, G.w, G.h);
+    G.drawerW = G.w * 0.75f;
+    if (G.drawerW > 320.0f) G.drawerW = 320.0f; /* max drawer width */
 
     genMockData();
     G.screen = SCR_LOGIN;
@@ -661,7 +679,9 @@ Java_chat_progressive_app_next_MainActivity_nativeInit(
 }
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeResize(JNIEnv*, jclass, jint w, jint h) {
-    G.w = w; G.h = h; if (G.init) { glViewport(0,0,w,h); layoutUI(); }
+    G.w = w; G.h = h;
+    G.drawerW = w * 0.75f; if (G.drawerW > 320.0f) G.drawerW = 320.0f;
+    if (G.init) { glViewport(0,0,w,h); layoutUI(); }
 }
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*, jclass) {
