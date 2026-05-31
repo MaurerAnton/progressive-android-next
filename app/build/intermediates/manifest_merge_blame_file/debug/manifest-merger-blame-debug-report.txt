@@ -8,42 +8,53 @@
 8        android:minSdkVersion="24"
 9        android:targetSdkVersion="35" />
 10
-11    <uses-feature
-11-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:3:5-78
-12        android:glEsVersion="0x00030000"
-12-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:3:19-51
-13        android:required="true" />
-13-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:3:52-75
-14
-15    <application
-15-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:4:5-17:19
-16        android:debuggable="true"
-17        android:extractNativeLibs="false"
-18        android:label="Progressive Next"
-18-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:5:9-41
-19        android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
-19-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:6:9-67
-20        <activity
-20-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:7:9-16:20
-21            android:name="chat.progressive.app.next.MainActivity"
-21-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:8:13-66
-22            android:configChanges="orientation|screenSize|keyboardHidden"
-22-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:9:13-74
-23            android:exported="true"
-23-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:10:13-36
-24            android:screenOrientation="portrait" >
-24-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:11:13-49
-25            <intent-filter>
-25-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:12:13-15:29
-26                <action android:name="android.intent.action.MAIN" />
-26-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:13:17-69
-26-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:13:25-66
-27
-28                <category android:name="android.intent.category.LAUNCHER" />
-28-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:14:17-77
-28-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:14:27-74
-29            </intent-filter>
-30        </activity>
-31    </application>
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:3:5-67
+11-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:3:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:4:5-79
+12-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:4:22-76
+13
+14    <uses-feature
+14-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:5:5-78
+15        android:glEsVersion="0x00030000"
+15-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:5:19-51
+16        android:required="true" />
+16-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:5:52-75
+17
+18    <application
+18-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:6:5-21:19
+19        android:debuggable="true"
+20        android:extractNativeLibs="false"
+21        android:label="Progressive Next"
+21-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:7:9-41
+22        android:networkSecurityConfig="@xml/network_security_config"
+22-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:10:9-69
+23        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+23-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:8:9-67
+24        android:usesCleartextTraffic="true" >
+24-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:9:9-44
+25        <activity
+25-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:11:9-20:20
+26            android:name="chat.progressive.app.next.MainActivity"
+26-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:12:13-66
+27            android:configChanges="orientation|screenSize|keyboardHidden"
+27-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:13:13-74
+28            android:exported="true"
+28-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:14:13-36
+29            android:screenOrientation="portrait" >
+29-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:15:13-49
+30            <intent-filter>
+30-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:16:13-19:29
+31                <action android:name="android.intent.action.MAIN" />
+31-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:17:17-69
+31-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:17:25-66
 32
-33</manifest>
+33                <category android:name="android.intent.category.LAUNCHER" />
+33-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:18:17-77
+33-->/home/bym/games/progressive-android-next/app/src/main/AndroidManifest.xml:18:27-74
+34            </intent-filter>
+35        </activity>
+36    </application>
+37
+38</manifest>

@@ -105,6 +105,14 @@ static struct{
     AAssetManager* amgr;
 }G;
 
+/* Forward declarations for Matrix JNI bridge */
+static JavaVM* gJvm=nullptr;
+static jclass gActivityClass=nullptr;
+static jobject gActivityObj=nullptr;
+static void matrixLogin(const char* user,const char* pass);
+static void matrixSync();
+static void matrixSendMsg(const char* roomId,const char* text);
+
 static GLuint mkS(GLenum t,const char*s){
     GLuint sh=glCreateShader(t);glShaderSource(sh,1,&s,nullptr);glCompileShader(sh);
     GLint ok;glGetShaderiv(sh,GL_COMPILE_STATUS,&ok);
@@ -1250,7 +1258,11 @@ static void tu(float x,float y){
             }
             else if(G.screen==SCR_MATRIX){
                 if(i==0){LOGI("Back");G.screen=SCR_SERVER;G.login.focusField=0;layoutUI();}
-                else if(i==1){LOGI("Sign in");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==1){LOGI("Sign in");
+                    G.login.hsUrl[G.login.hsLen]=0;
+                    G.login.user[G.login.userLen]=0;
+                    G.login.pass[G.login.passLen]=0;
+                    matrixLogin(G.login.user,G.login.pass);}
                 else if(i==2){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();}
                 /* i==3,4,5 are field touch areas */
                 else if(i==3)G.login.focusField=1;
@@ -1309,6 +1321,7 @@ static void tu(float x,float y){
                         Room&r=G.rooms[G.activeRoom];
                         char sendBuf[256];memcpy(sendBuf,G.login.chatInput,G.login.chatInputLen);sendBuf[G.login.chatInputLen]=0;
                         r.msgs.push_back({strdup("me"),strdup(sendBuf),12,0,0,0});
+                        matrixSendMsg(r.name,sendBuf);
                         G.login.chatInputLen=0;G.login.replyTo=-1;
                         G.sy=0;layoutUI();
                     }
@@ -1352,6 +1365,11 @@ static void tm(float x,float y){
 /* ====== INIT ====== */
 static bool initGL(JNIEnv*env,jobject am){
     LOGI("init %dx%d",G.w,G.h);
+    /* Store JVM for Matrix callbacks */
+    env->GetJavaVM(&gJvm);
+    jclass cls=env->GetObjectClass(am);
+    gActivityClass=(jclass)env->NewGlobalRef(cls);
+    /* Get MainActivity instance via AssetManager's context... use a simpler approach */
     G.amgr=AAssetManager_fromJava(env,am);if(!G.amgr)return false;
     G.prog=mkP(kVS,kFS);if(!G.prog)return false;
     G.uMVP=glGetUniformLocation(G.prog,"uMVP");
@@ -1433,11 +1451,24 @@ static bool initGL(JNIEnv*env,jobject am){
     glViewport(0,0,G.w,G.h);
     G.dp=(float)G.w/411.0f; /* density scale: 1080px/411dp = 2.63 */
     G.dw=G.w*0.75f;if(G.dw>320.0f)G.dw=320.0f;
+    /* Pre-fill Matrix credentials for testing */
+    snprintf(G.login.hsUrl,64,"https://progressive.chat");
+    G.login.hsLen=strlen(G.login.hsUrl);
+    snprintf(G.login.user,64,"@temp:progressive.chat");
+    G.login.userLen=strlen(G.login.user);
+    snprintf(G.login.pass,64,"temproacc5");
+    G.login.passLen=strlen(G.login.pass);
     genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
     LOGI("init ok");return true;
 }
 
 extern "C"{
+JNIEXPORT void JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeSetActivity(JNIEnv*env,jclass,jobject act){
+    gActivityObj=env->NewGlobalRef(act);
+    LOGI("Activity stored");
+}
+
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeInit(JNIEnv*e,jclass,jint w,jint h,jobject am){
     G.w=w;G.h=h;if(!G.init)initGL(e,am);
@@ -1454,6 +1485,13 @@ Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
         if(G.screen==SCR_SERVER&&++G.login.frameCount>300){
             G.login.carouselPage=(G.login.carouselPage+1)%4;
             G.login.frameCount=0;
+        }
+        /* Auto-login test: login after 5s on server screen */
+        static int autoLoginFrames=0;
+        if(G.init&&autoLoginFrames==0){autoLoginFrames=1;}
+        if(G.screen==SCR_SERVER&&++autoLoginFrames>300&&autoLoginFrames<310){
+            matrixLogin("@temp:progressive.chat","temproacc5");
+            autoLoginFrames=1000; /* fire once */
         }
         if(!G.touching&&fabsf(G.sv)>0.5f){G.sy+=G.sv;G.sv*=0.92f;}
         frame();
@@ -1490,5 +1528,149 @@ Java_chat_progressive_app_next_MainActivity_nativeSetFieldText(JNIEnv*env,jclass
     else if(field==4){if(len>250)len=250;memcpy(G.login.chatInput,s,len);G.login.chatInputLen=len;}
     else if(field==5){if(len>30)len=30;memcpy(G.login.searchQ,s,len);G.login.searchQLen=len;}
     env->ReleaseStringUTFChars(jtext,s);
+}
+
+/* ===== MATRIX CALLBACKS ===== */
+static void callJavaMethod(const char* name){
+    if(!gJvm||!gActivityClass||!gActivityObj)return;
+    JNIEnv* env;bool detach=false;
+    int st=gJvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+    if(st==JNI_EDETACHED){gJvm->AttachCurrentThread(&env,nullptr);detach=true;}
+    jmethodID mid=env->GetMethodID(gActivityClass,name,"()V");
+    if(mid)env->CallVoidMethod(gActivityObj,mid);
+    if(detach)gJvm->DetachCurrentThread();
+}
+
+static void matrixLogin(const char* user,const char* pass){
+    if(!gJvm||!gActivityClass||!gActivityObj)return;
+    JNIEnv* env;bool detach=false;
+    int st=gJvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+    if(st==JNI_EDETACHED){gJvm->AttachCurrentThread(&env,nullptr);detach=true;}
+    jmethodID mid=env->GetMethodID(gActivityClass,"jniLogin","(Ljava/lang/String;Ljava/lang/String;)V");
+    if(mid){
+        jstring ju=env->NewStringUTF(user),jp=env->NewStringUTF(pass);
+        env->CallVoidMethod(gActivityObj,mid,ju,jp);
+        env->DeleteLocalRef(ju);env->DeleteLocalRef(jp);
+    }
+    if(detach)gJvm->DetachCurrentThread();
+}
+
+static void matrixSync(){
+    if(!gJvm||!gActivityClass||!gActivityObj)return;
+    JNIEnv* env;bool detach=false;
+    int st=gJvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+    if(st==JNI_EDETACHED){gJvm->AttachCurrentThread(&env,nullptr);detach=true;}
+    jmethodID mid=env->GetMethodID(gActivityClass,"jniSync","()V");
+    if(mid)env->CallVoidMethod(gActivityObj,mid);
+    if(detach)gJvm->DetachCurrentThread();
+}
+
+static void matrixSendMsg(const char* roomId,const char* text){
+    if(!gJvm||!gActivityClass||!gActivityObj)return;
+    JNIEnv* env;bool detach=false;
+    int st=gJvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+    if(st==JNI_EDETACHED){gJvm->AttachCurrentThread(&env,nullptr);detach=true;}
+    jmethodID mid=env->GetMethodID(gActivityClass,"jniSendMessage","(Ljava/lang/String;Ljava/lang/String;)V");
+    if(mid){
+        jstring jr=env->NewStringUTF(roomId),jt=env->NewStringUTF(text);
+        env->CallVoidMethod(gActivityObj,mid,jr,jt);
+        env->DeleteLocalRef(jr);env->DeleteLocalRef(jt);
+    }
+    if(detach)gJvm->DetachCurrentThread();
+}
+
+/* Simple JSON value extractor */
+static const char* jsonVal(const char* json,const char* key){
+    static char buf[4096];buf[0]=0;
+    char search[128];snprintf(search,128,"\"%s\":\"",key);
+    const char* p=strstr(json,search);
+    if(!p){snprintf(search,128,"\"%s\": \"",key);p=strstr(json,search);}
+    if(!p)return buf;
+    p+=strlen(search);
+    const char* e=p;
+    while(*e&&*e!='"'){if(*e=='\\')e++;e++;}
+    int len=e-p;if(len>4095)len=4095;
+    memcpy(buf,p,len);buf[len]=0;
+    return buf;
+}
+
+/* Parse Matrix sync response and populate rooms */
+static void parseSyncResponse(JNIEnv* env,const char* json){
+    const char* rooms=strstr(json,"\"rooms\":{");
+    if(!rooms)return;
+    const char* join=strstr(rooms,"\"join\":{");
+    if(!join)return;
+    /* Clear existing rooms and rebuild from sync */
+    G.rooms.clear();
+    const char* pos=join+7;
+    while(*pos&&*pos!='}'){
+        if(*pos=='"'&&*(pos+1)!='\0'){
+            const char* rs=pos+1;const char* re=strchr(rs,'"');
+            if(re&&(re-rs)<64){
+                char rid[64];memcpy(rid,rs,re-rs);rid[re-rs]=0;
+                /* Find room content */
+                const char* rp=strchr(re+1,'{');
+                if(rp){
+                    const char* name=jsonVal(rp,"name");
+                    const char* topic=jsonVal(rp,"topic");
+                    Room r;r.name=strdup(*rid=='!'?(rid+1):rid);
+                    r.topic=strdup(*topic?topic:(*name?name:""));
+                    r.unread=0;
+                    /* Parse timeline events */
+                    const char* tl=strstr(rp,"\"timeline\":{");
+                    if(tl){
+                        const char* evts=strstr(tl,"\"events\":[");
+                        if(evts){
+                            const char* ep=evts+9;
+                            int depth=1,count=0;
+                            while(*ep&&depth>0&&count<50){
+                                if(*ep=='{'){depth++;const char* ce=ep;
+                                    const char* sender=jsonVal(ce,"sender");
+                                    const char* body=jsonVal(ce,"body");
+                                    if(*sender&&*body){
+                                        Message m;
+                                        m.nick=strdup(sender);
+                                        const char* at=strchr(sender,':');
+                                        if(at)m.nick=strdup(at+1);
+                                        m.text=strdup(body);
+                                        m.h=12;m.m=count%60;m.ci=0;m.type=0;
+                                        unsigned h=0;for(const char* x=m.nick;*x;x++)h=h*31+*x;m.ci=h%16;
+                                        r.msgs.push_back(m);count++;
+                                    }
+                                }
+                                else if(*ep=='}')depth--;
+                                ep++;
+                            }
+                        }
+                    }
+                    G.rooms.push_back(r);
+                }
+                pos=re+1;
+            }else break;
+        }else pos++;
+    }
+    G.activeRoom=0;G.screen=SCR_CHATLIST;layoutUI();
+}
+
+JNIEXPORT void JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeOnMatrixResult(JNIEnv* env,jclass,jstring jjson){
+    const char* json=env->GetStringUTFChars(jjson,nullptr);
+    LOGI("Matrix: %.200s",json);
+    const char* type=jsonVal(json,"type");
+    if(strcmp(type,"login")==0){
+        const char* uid=jsonVal(json,"user_id");
+        if(*uid){strncpy(G.login.user,uid,63);G.login.userLen=strlen(G.login.user);}
+        matrixSync();
+    }else{
+        parseSyncResponse(env,json);
+    }
+    env->ReleaseStringUTFChars(jjson,json);
+}
+
+JNIEXPORT void JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeOnMatrixError(JNIEnv* env,jclass,jstring jerr){
+    const char* err=env->GetStringUTFChars(jerr,nullptr);
+    LOGE("Matrix error: %s",err);
+    env->ReleaseStringUTFChars(jerr,err);
 }
 }

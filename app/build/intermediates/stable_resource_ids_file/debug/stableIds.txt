@@ -1,0 +1,1 @@
+chat.progressive.app.next:xml/network_security_config = 0x7f010000
