@@ -277,66 +277,67 @@ static void layoutUI(){
 /* ====== ONBOARDING CAROUSEL ====== */
 static void renderOnboard(){
     int page=G.login.carouselPage;
-    /* Carousel content: 4 pages matching progressive-android splash */
     struct{const char*title;const char*body;}pages[]={
         {"Own your conversations.","Secure and independent communication, same privacy as a face-to-face conversation in your own home."},
-        {"You're in control.","Choose where your conversations are kept. Connected via Matrix, giving you full control."},
+        {"You're in control.","Choose where your conversations are kept. Connected via Matrix, giving you full control and independence."},
         {"Secure messaging.","End-to-end encrypted, no phone number required. No ads, no data mining, no tracking."},
         {"Messaging for your team.","Great for the workplace too. Trusted by the world's most secure organisations."},
     };
     int nPages=4;
 
-    /* Page indicator dots */
-    float dotY=G.h*0.52f,dotR=5.0f,dotGap=16.0f,dotW=nPages*(dotR*2+dotGap)-dotGap;
-    float dotX=(G.w-dotW)*0.5f;
+    /* Page indicator dots - centered */
+    float dotR=4.0f*G.dp,dotGap=12.0f*G.dp,dotW=nPages*(dotR*2+dotGap)-dotGap;
+    float dotX=(G.w-dotW)*0.5f,dotY=G.h*0.58f;
     for(int i=0;i<nPages;i++){
-        bool active=(i==page);
         rrct(dotX+i*(dotR*2+dotGap),dotY,dotR*2,dotR*2,dotR,
-            active?Vec4{C_TITLE}:Vec4{0.25f,0.25f,0.30f,1.0f});
+            i==page?Vec4{C_TITLE}:Vec4{0.22f,0.22f,0.28f,1.0f});
     }
 
-    /* Page content area */
-    float pad=G.w*0.10f,contentW=G.w-pad*2;
-    float y=G.h*0.22f;
-
-    /* Icon placeholder (colored rect with accent) */
-    Vec4 iconColors[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
-    float is=G.w*0.28f;
-    rrct((G.w-is)*0.5f,y,is,is,20.0f,iconColors[page]);
-    y+=is+24.0f*G.dp;
+    /* Icon placeholder per page */
+    Vec4 iconC[]={Vec4{C_CYAN},Vec4{C_GREEN},Vec4{C_PURPLE},Vec4{0.80f,0.65f,0.30f,1.0f}};
+    float is=G.w*0.26f,iy=G.h*0.12f;
+    rrct((G.w-is)*0.5f,iy,is,is,is*0.22f,iconC[page]);
 
     /* Title */
-    txt((G.w-msr(pages[page].title,18.0f*G.dp))*0.5f,y,pages[page].title,18.0f*G.dp,Vec4{C_WHITE});
-    y+=28.0f*G.dp;
+    float ty=iy+is+20.0f*G.dp;
+    float tsz=18.0f*G.dp;
+    txt((G.w-msr(pages[page].title,tsz))*0.5f,ty,pages[page].title,tsz,Vec4{C_WHITE});
 
-    /* Body text - word wrap simulation: split into lines */
-    const char*body=pages[page].body;
-    /* Simple: render body at ~13sp with max width */
-    float maxW=G.w*0.80f;
-    /* Just render as single line for now, clipped to width */
-    txt((G.w-msr(body,13.0f*G.dp))*0.5f,y,body,13.0f*G.dp,Vec4{C_LABEL});
+    /* Body - multi-line word wrap */
+    float bx=G.w*0.12f,bw=G.w*0.76f,by=ty+24.0f*G.dp,bsz=13.0f*G.dp;
+    const char*b=pages[page].body;
+    char word[64];int wi=0;
+    float cx=bx;
+    for(const char*p=b;;p++){
+        if(*p==' '||*p=='\0'){
+            if(wi>0){word[wi]=0;wi=0;
+                float ww=msr(word,bsz);
+                if(cx+ww>bx+bw&&cx>bx+4.0f){cx=bx;by+=bsz*1.5f;}
+                txt(cx,by,word,bsz,Vec4{C_LABEL});
+                cx+=ww+msr(" ",bsz);
+            }
+            if(*p=='\0')break;
+        }else{word[wi++]=(unsigned char)*p;if(wi>=63)wi=63;}
+    }
 
     /* Buttons at bottom */
-    float btnW=G.w*0.78f,btnH=44.0f*G.dp;
-    float btnX=(G.w-btnW)*0.5f;
-    float btnY=G.h*0.78f;
+    float btnW=G.w*0.76f,btnH=44.0f*G.dp,btnX=(G.w-btnW)*0.5f;
+    float btnY=G.h*0.80f;
 
-    /* Sign In button */
-    G.btns[0].rect={btnX,btnY,btnW,btnH};
-    G.btns[0].text="Sign In";
-    G.btns[0].color=Vec4{C_DARK};
-    btn(G.btns[0],14.0f*G.dp);
-    btnY+=btnH+12.0f*G.dp;
+    /* Sign In - text button (no fill) */
+    txt((G.w-msr("Sign In",14.0f*G.dp))*0.5f,btnY+8.0f,"Sign In",14.0f*G.dp,Vec4{C_CYAN});
+    G.btns[0].rect={btnX-8.0f,btnY-4.0f,btnW+16.0f,btnH*0.7f};
+    G.btns[0].text=nullptr;G.btns[0].color=Vec4{0,0,0,0};
+    btnY+=btnH*0.7f+8.0f*G.dp;
 
-    /* Create account button */
+    /* Create account - filled button */
     G.btns[1].rect={btnX,btnY,btnW,btnH};
     G.btns[1].text="Create account";
     G.btns[1].color=Vec4{C_CYAN};
     btn(G.btns[1],14.0f*G.dp);
 
-    /* Version */
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",11.0f*G.dp))*0.5f,G.h-26.0f,
-        "Progressive IRC  v0.5.5-pre",11.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-24.0f,
+        "Progressive IRC  v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
 /* ====== PROTOCOL SELECTION SCREEN ====== */
