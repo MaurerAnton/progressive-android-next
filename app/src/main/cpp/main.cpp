@@ -80,7 +80,7 @@ struct Vec4{float r,g,b,a;};
 struct Rect{float x,y,w,h;};
 struct Button{Rect rect;const char* text;Vec4 color;bool pressed;};
 struct GlyphVertex{float px,py,tx,ty;};
-struct Message{const char*nick,*text;int h,m;int ci;};
+struct Message{const char*nick,*text;int h,m;int ci;char type;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
 enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
@@ -224,31 +224,52 @@ static void genData(){
         "Random off-topic chat | Keep it civil",
         "Development | C++ / OpenGL / Matrix bridge",
         "Matrix protocol discussion and testing"};
-    struct{const char*n,*t;int h,m;}ms[][8]={
-        {{nullptr,"--> alice (~alice) joined #welcome",9,5},
-         {"alice","hello everyone!",9,6},{nullptr,"--> bob (~bob) joined #welcome",9,7},
-         {"bob","hey alice, how's it going?",9,7},{"alice","pretty good! working on the renderer",9,8},
-         {nullptr,"--> charlie (~charlie) joined #welcome",9,9},
-         {"charlie","what renderer are you using?",9,10},
-         {"alice","pure OpenGL ES with signed-distance-field fonts",9,12}},
-        {{nullptr,"--> dave joined #general",10,14},{"dave","anyone here?",10,15},
-         {"eve","yep, just lurking",10,16},{nullptr,"<-- frank left #general",10,18}},
-        {{"frank","lol check this out https://example.com",11,20},
-         {"grace","haha that's amazing",11,21},{"heidi","i don't get it",11,22},
-         {"frank","you had to be there",11,23}},
-        {{"ivan","pushed a new commit to the renderer",14,0},
-         {nullptr,"--> judy joined #dev",14,1},{"judy","nice! SDF fonts looking crisp?",14,2},
-         {"ivan","yeah, smoothstep AA is working great",14,3},
-         {"karen","can we use this for the main app?",14,5},
-         {"ivan","that's the plan! merging into 0.5.5+",14,6}},
-        {{"larry","testing the matrix bridge",15,30},{"mike","seems to be working",15,31},
-         {"nancy","which homeserver are you on?",15,32},{"larry","matrix.org for now",15,33}}};
-    int mc[]={8,4,4,6,4};
+    struct{const char*n,*t;int h,m;char tp;}ms[][20]={
+        {{nullptr,"--> alice joined #welcome",9,5},
+         {"alice","hello everyone!",9,6,0},
+         {nullptr,"--> bob joined #welcome",9,7},
+         {"bob","hey alice, how's it going?",9,7,0},
+         {"alice","pretty good! working on the renderer",9,8,0},
+         {nullptr,"--> charlie joined #welcome",9,9},
+         {"charlie","what renderer are you using?",9,10,0},
+         {"alice","pure OpenGL ES with SDF fonts. no JVM UI!",9,12,0},
+         {"bob","check out this screenshot:",9,15,0},
+         {"bob","[IMAGE: screenshot_2024.png (1920x1080, 245KB)]",9,15,1},
+         {"charlie","nice! here's the build log:",9,18,0},
+         {"charlie","[FILE: build_output.log (12.4KB)]",9,18,2},
+         {"alice","and a voice memo about the architecture:",9,22,0},
+         {"alice","[AUDIO: architecture_notes.ogg (0:42)]",9,22,3},
+         {"bob","let's vote on the next feature:",9,25,0},
+         {"bob","[POLL: Which feature first? 1)Avatars 2)Encryption 3)Search]",9,25,4},
+         {"charlie","I vote for avatars",9,26,6},
+         {"alice","encryption is more important",9,27,6},
+         {"bob","here's where we're hosting:",9,30,0},
+         {"bob","[MAP: Server location - Frankfurt, DE]",9,30,5}},
+        {{nullptr,"--> dave joined #general",10,14},
+         {"dave","anyone here?",10,15,0},
+         {"eve","yep, just lurking",10,16,0},
+         {nullptr,"<-- frank left #general",10,18}},
+        {{"frank","lol check this out https://example.com",11,20,0},
+         {"grace","haha that's amazing",11,21,0},
+         {"heidi","i don't get it",11,22,0},
+         {"frank","you had to be there",11,23,0}},
+        {{"ivan","pushed a new commit to the renderer",14,0,0},
+         {nullptr,"--> judy joined #dev",14,1},
+         {"judy","nice! SDF fonts looking crisp?",14,2,0},
+         {"ivan","yeah, smoothstep AA is working great",14,3,0},
+         {"karen","can we use this for the main app?",14,5,0},
+         {"ivan","that's the plan! merging into 0.5.5+",14,6,0}},
+        {{"larry","testing the matrix bridge",15,30,0},
+         {"mike","seems to be working",15,31,0},
+         {"nancy","which homeserver are you on?",15,32,0},
+         {"larry","matrix.org for now",15,33,0}}};
+    int mc[]={20,4,4,6,4};
     for(int ri=0;ri<5;ri++){
         Room r;r.name=rn[ri];r.topic=rt[ri];r.unread=ri<3?2:0;
         for(int mi=0;mi<mc[ri];mi++){
             Message m;m.nick=ms[ri][mi].n;m.text=ms[ri][mi].t;
             m.h=ms[ri][mi].h;m.m=ms[ri][mi].m;
+            m.type=ms[ri][mi].tp;
             if(m.nick){unsigned h=0;for(const char*p=m.nick;*p;p++)h=h*31+*p;m.ci=h%16;}else m.ci=0;
             r.msgs.push_back(m);
         }G.rooms.push_back(r);
@@ -753,10 +774,19 @@ static void renderChat(){
             /* Avatar circle */
             float ax=tx-2.0f,ay=my+lh*0.3f,ar=lh*0.35f;
             rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
-            /* Initial letter */
             char init[2]={(char)m.nick[0],0};
             txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
             tx=ax+ar*2+6.0f;
+            /* Type indicator */
+            const char* tpref="";
+            Vec4 tc=nc;
+            if(m.type==1){tpref="[IMG] ";tc=Vec4{0.30f,0.65f,0.85f,1.0f};}
+            else if(m.type==2){tpref="[FILE] ";tc=Vec4{0.85f,0.65f,0.30f,1.0f};}
+            else if(m.type==3){tpref="[AUDIO] ";tc=Vec4{0.55f,0.45f,0.85f,1.0f};}
+            else if(m.type==4){tpref="[POLL] ";tc=Vec4{0.25f,0.70f,0.55f,1.0f};}
+            else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
+            else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
+            if(m.type>0){txt(tx,my+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);tx+=msr(tpref,10.0f*G.dp);}
             txt(tx,my+lh*0.75f,m.nick,13.0f*G.dp,nc,1.05f);
             tx+=msr(m.nick,13.0f*G.dp)+4.0f;
             txt(tx,my+lh*0.75f,m.text,13.0f*G.dp,Vec4{C_WHITE},1.05f);
