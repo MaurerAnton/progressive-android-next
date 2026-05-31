@@ -329,7 +329,7 @@ static void layoutUI(){
         case SCR_IRC: G.nb=3; break; /* back + TLS + Connect */
         case SCR_PROFILE: G.nb=6; break; /* back + 5 action buttons */
         case SCR_SETTINGS: G.nb=6; break; /* back + 5 toggles */
-        case SCR_ROOMINFO: G.nb=5; break; /* back + 4 management buttons */
+        case SCR_ROOMINFO: G.nb=6; break; /* back + 5 management buttons */
         case SCR_CHATLIST: G.nb=10; break; /* header buttons + room items */
         case SCR_CHAT:{
             G.btns[G.nb++]=mkB(8,78,50,40,"<",Vec4{C_DARK}); /* back - below status bar */
@@ -834,10 +834,11 @@ static void renderRoomInfo(){
     txt((G.w-msr("Online",12.0f*G.dp))*0.5f,y,"Online",12.0f*G.dp,Vec4{C_GREEN});
     y+=20.0f*G.dp;
     char nb[48];snprintf(nb,48,"Notifications: %s",G.login.notifsOn?"ON":"OFF");
-    const char* acts[]={nb,"Pin room","Search messages","Leave room"};
-    for(int i=0;i<4;i++){
+    const char* acts[]={nb,"Pin room","Search messages","Invite people","Leave room"};
+    for(int i=0;i<5;i++){
         rrct(pad,y,fw,44.0f*G.dp,10.0f,Vec4{0.15f,0.15f,0.22f,1.0f});
-        txt(pad+16.0f,y+28.0f*G.dp,acts[i],14.0f*G.dp,i==3?Vec4{0.95f,0.35f,0.35f,1.0f}:i==2?Vec4{C_CYAN}:Vec4{C_WHITE});
+        Vec4 ac=i==4?Vec4{0.95f,0.35f,0.35f,1.0f}:i==2?Vec4{C_CYAN}:i==3?Vec4{C_PURPLE}:Vec4{C_WHITE};
+        txt(pad+16.0f,y+28.0f*G.dp,acts[i],14.0f*G.dp,ac);
         G.btns[1+i].rect={pad,y,fw,44.0f*G.dp};
         G.btns[1+i].color=Vec4{0,0,0,0};G.btns[1+i].text=nullptr;
         y+=48.0f*G.dp;
