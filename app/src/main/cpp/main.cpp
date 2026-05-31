@@ -1059,11 +1059,13 @@ static void renderChat(){
         }
         /* Message bubble for user messages */
         if(m.nick){
+            bool isMe=(strcmp(m.nick,"me")==0);
             Vec4 nc={kNicks[m.ci][0],kNicks[m.ci][1],kNicks[m.ci][2],1.0f};
+            Vec4 bubbleBg=isMe?Vec4{0.08f,0.15f,0.22f,1.0f}:Vec4{0.10f,0.10f,0.16f,1.0f};
             float bx=6.0f*G.dp,by=my,bw=G.w-20.0f*G.dp,bh=rw.h+4.0f;
             float ar=lh*0.40f,ax=bx+8.0f,ay=by+lh*0.3f;
             if(!grouped){
-                rrct(bx,by,bw,bh,10.0f,Vec4{0.10f,0.10f,0.16f,1.0f});
+                rrct(bx,by,bw,bh,10.0f,bubbleBg);
                 rrct(ax,ay-ar,ar*2,ar*2,ar,nc);
                 char init[2]={(char)m.nick[0],0};
                 txt(ax+ar-msr(init,10.0f*G.dp)*0.5f,ay+4.0f,init,10.0f*G.dp,Vec4{C_WHITE},1.0f);
