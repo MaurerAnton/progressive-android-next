@@ -955,7 +955,10 @@ static void renderChat(){
     btn(G.btns[0],14.0f*G.dp); /* < back */
     btn(G.btns[1],14.0f*G.dp); /* # drawer */
     btn(G.btns[2],14.0f*G.dp); /* Q search */
-    btn(G.btns[3],14.0f*G.dp); /* v scroll down */
+    btn(G.btns[3],14.0f*G.dp); /* VVV scroll down */
+    /* Call button */
+    rct(G.w-186,78,28,40,Vec4{C_DARK});
+    txt(G.w-180,78+26,"*",18.0f*G.dp,Vec4{C_GREEN});
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
     /* Connection dot */
     Vec4 dotC=Vec4{0.20f,0.72f,0.40f,1.0f}; /* green online */
