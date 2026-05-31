@@ -236,7 +236,7 @@ static void genData(){
 static void layoutUI(){
     G.nb=0;
     switch(G.screen){
-        case SCR_SERVER: G.nb=3; break; /* 3 server option buttons */
+        case SCR_SERVER: G.nb=8; break; /* 2 chips + 6 protocol cards */
         case SCR_MATRIX: G.nb=2; break;
         case SCR_IRC: G.nb=2; break;
         case SCR_CHAT:{
@@ -250,45 +250,67 @@ static void layoutUI(){
     }
 }
 
-/* ====== SERVER SELECTION SCREEN ====== */
+/* ====== PROTOCOL SELECTION SCREEN ====== */
 static void renderServerSelect(){
-    float pad=G.w*0.08f,fw=G.w*0.84f,cardH=72.0f,cardGap=14.0f;
-    int nCards=3;
-    float contentH=60.0f+40.0f+20.0f+nCards*(cardH+cardGap)+cardGap+48.0f+40.0f;
-    float startY=(G.h-contentH)*0.35f;
-    if(startY<G.h*0.05f)startY=G.h*0.05f;
-    float y=startY;
+    float pad=G.w*0.06f,fw=G.w*0.88f,cardH=64.0f,cardGap=6.0f;
+    float chipH=34.0f,titleTotal=60.0f+28.0f+24.0f+18.0f+12.0f;
+    int nCards=6;
+    float totalH=titleTotal+chipH+24.0f+nCards*(cardH+cardGap)+30.0f;
+    float y=(G.h-totalH)*0.18f;
+    if(y<G.h*0.02f)y=G.h*0.02f;
 
-    /* Title */
-    txt((G.w-msr("Select a server",28.0f))*0.5f,y,"Select a server",28.0f,Vec4{C_TITLE});
-    y+=44.0f;
+    /* Logo area */
+    /* Simple text logo since we can't draw images */
+    rrct((G.w-60.0f)*0.5f,y,60.0f,60.0f,14.0f,Vec4{C_CYAN});
+    txt((G.w-msr("PC",20.0f))*0.5f,y+36.0f,"PC",20.0f,Vec4{C_WHITE});
+    y+=68.0f;
 
-    /* Description */
-    txt(pad+4.0f,y,"Just like email, accounts have one home,",15.0f,Vec4{C_LABEL});
-    y+=22.0f;
-    txt(pad+4.0f,y,"although you can talk to anyone.",15.0f,Vec4{C_LABEL});
-    y+=36.0f;
+    txt((G.w-msr("Progressive Chat",22.0f))*0.5f,y,"Progressive Chat",22.0f,Vec4{C_WHITE});
+    y+=32.0f;
 
-    /* Server cards */
-    auto card=[&](const char*title,const char*desc,int idx,Vec4 accent){
-        rrct(pad,y,fw,cardH,12.0f,Vec4{0.14f,0.14f,0.20f,1.0f});
-        /* Accent left edge */
-        rct(pad,y,4.0f,cardH,accent);
-        txt(pad+16.0f,y+16.0f,title,18.0f,Vec4{C_WHITE});
-        txt(pad+16.0f,y+40.0f,desc,13.0f,Vec4{C_LABEL});
-        G.btns[idx].rect={pad,y,fw,cardH};
-        G.btns[idx].color=accent;
-        G.btns[idx].text=nullptr;
-        y+=cardH+cardGap;
+    txt((G.w-msr("Choose your protocol",16.0f))*0.5f,y,"Choose your protocol",16.0f,Vec4{C_LABEL});
+    y+=26.0f;
+
+    /* Category chips */
+    float chipW=fw*0.5f-4.0f;
+    rrct(pad,y,chipW,chipH,chipH/2,G.btns[0].pressed?Vec4{C_CYAN}:Vec4{0.18f,0.18f,0.25f,1.0f});
+    txt(pad+chipW*0.15f,y+chipH*0.35f+4.0f,"Open source",13.0f,Vec4{C_WHITE});
+    G.btns[0].rect={pad,y,chipW,chipH};
+
+    rrct(pad+chipW+8.0f,y,chipW,chipH,chipH/2,Vec4{0.10f,0.10f,0.14f,1.0f});
+    txt(pad+chipW+8.0f+chipW*0.25f,y+chipH*0.35f+4.0f,"Proprietary",13.0f,Vec4{C_LABEL});
+    G.btns[1].rect={pad+chipW+8.0f,y,chipW,chipH};
+    y+=chipH+10.0f;
+
+    txt(pad+4.0f,y,"Decentralized, fully open and free.",12.0f,Vec4{C_HINT});
+    y+=24.0f;
+
+    /* Protocol cards */
+    struct{const char*title,*desc;Vec4 accent;bool dim;}cards[]={
+        {"Matrix","Modern messenger with E2E encryption",Vec4{C_CYAN},false},
+        {"IRC","Lightweight classic for old-school hackers",Vec4{C_GREEN},false},
+        {"XMPP","Federated instant messaging since 1999",Vec4{C_PURPLE},true},
+        {"Delta Chat","Chat over email - no new account needed",Vec4{0.40f,0.55f,0.75f,1.0f},true},
+        {"Lemmy","Decentralized link aggregator",Vec4{0.75f,0.65f,0.30f,1.0f},true},
+        {"Reddit","The front page of the internet",Vec4{0.85f,0.45f,0.30f,1.0f},true},
     };
+    for(int i=0;i<nCards;i++){
+        float alpha=cards[i].dim?0.45f:1.0f;
+        rrct(pad,y,fw,cardH,10.0f,Vec4{0.12f*alpha,0.12f*alpha,0.17f*alpha,1.0f});
+        /* Accent stripe */
+        rct(pad,y,3.0f,cardH,Vec4{cards[i].accent.r*alpha,cards[i].accent.g*alpha,cards[i].accent.b*alpha,1.0f});
+        /* Icon placeholder */
+        rrct(pad+10.0f,y+12.0f,38.0f,38.0f,8.0f,Vec4{cards[i].accent.r*0.3f*alpha,cards[i].accent.g*0.3f*alpha,cards[i].accent.b*0.3f*alpha,1.0f});
+        txt(pad+58.0f,y+16.0f,cards[i].title,15.0f,cards[i].dim?Vec4{C_LABEL}:Vec4{C_WHITE});
+        txt(pad+58.0f,y+38.0f,cards[i].desc,11.0f,cards[i].dim?Vec4{C_HINT}:Vec4{C_LABEL});
+        if(cards[i].dim)txt(pad+fw-70.0f,y+16.0f,"Soon",13.0f,Vec4{C_HINT});
+        G.btns[2+i].rect={pad,y,fw,cardH};
+        G.btns[2+i].color=cards[i].accent;
+        y+=cardH+cardGap;
+    }
 
-    card("matrix.org","Join millions for free on the largest public server",0,Vec4{C_CYAN});
-    card("Custom server","Enter your own homeserver URL",1,Vec4{C_GREEN});
-    card("IRC","Connect via IRC bridge (old-school style)",2,Vec4{C_PURPLE});
-    y+=8.0f;
-
-    txt((G.w-msr("Progressive IRC  v0.5.5-pre",12.0f))*0.5f,G.h-28.0f,
-        "Progressive IRC  v0.5.5-pre",12.0f,Vec4{C_HINT});
+    txt((G.w-msr("Progressive IRC  v0.5.5-pre",11.0f))*0.5f,G.h-24.0f,
+        "Progressive IRC  v0.5.5-pre",11.0f,Vec4{C_HINT});
 }
 
 /* ====== IRC AUTH SCREEN ====== */
@@ -498,9 +520,11 @@ static void tu(float x,float y){
     for(int i=0;i<G.nb;i++)if(G.btns[i].pressed){G.btns[i].pressed=false;
         if(hit(x,y,G.btns[i].rect)){
             if(G.screen==SCR_SERVER){
-                if(i==0){LOGI("matrix.org");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==1){LOGI("Custom");G.screen=SCR_MATRIX;layoutUI();}
-                else if(i==2){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                if(i==0){LOGI("Open source chip");}
+                else if(i==1){LOGI("Proprietary chip");}
+                else if(i==2){LOGI("Matrix");G.screen=SCR_MATRIX;layoutUI();}
+                else if(i==3){LOGI("IRC");G.screen=SCR_IRC;layoutUI();}
+                /* 4-7 are dimmed coming-soon cards, no action */
             }
             else if(G.screen==SCR_MATRIX){
                 if(i==0){LOGI("Sign in");G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
