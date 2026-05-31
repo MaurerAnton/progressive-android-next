@@ -1935,7 +1935,7 @@ Java_chat_progressive_app_next_MainActivity_nativeOnMatrixError(JNIEnv* env,jcla
     const char* err=env->GetStringUTFChars(jerr,nullptr);
     LOGE("Matrix error: %s",err);
     G.mtxState=MTX_ERROR;
-    snprintf(G.mtxError,128,"%.120s",err);
+    snprintf(G.mtxError,128,"Connection failed: %.100s",err);
     env->ReleaseStringUTFChars(jerr,err);
 }
 
