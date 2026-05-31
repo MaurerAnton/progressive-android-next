@@ -1,3 +1,12 @@
 ninja: Entering directory `/home/bym/games/progressive-android-next/app/.cxx/Debug/2l5x6ov1/arm64-v8a'
 [1/2] Building CXX object CMakeFiles/progressivenext.dir/main.cpp.o
-[2/2] Linking CXX shared library /home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so
+FAILED: CMakeFiles/progressivenext.dir/main.cpp.o 
+/home/bym/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android24 --sysroot=/home/bym/android-sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dprogressivenext_EXPORTS -I/home/bym/games/progressive-android-next/app/src/main/cpp -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -MD -MT CMakeFiles/progressivenext.dir/main.cpp.o -MF CMakeFiles/progressivenext.dir/main.cpp.o.d -o CMakeFiles/progressivenext.dir/main.cpp.o -c /home/bym/games/progressive-android-next/app/src/main/cpp/main.cpp
+/home/bym/games/progressive-android-next/app/src/main/cpp/main.cpp:749:73: error: use of undeclared identifier 'up'
+  749 |     G.btns[2].rect={(G.w-msr("Create account",14.0f*G.dp))*0.5f-8.0f,cy-up,msr("Create account",14.0f*G.dp)+16.0f,28.0f};
+      |                                                                         ^
+/home/bym/games/progressive-android-next/app/src/main/cpp/main.cpp:751:61: error: use of undeclared identifier 'up'
+  751 |     txt((G.w-msr("Or sign in with SSO",11.0f*G.dp))*0.5f,cy-up+44.0f*G.dp,"Or sign in with SSO",11.0f*G.dp,Vec4{C_HINT});
+      |                                                             ^
+2 errors generated.
+ninja: build stopped: subcommand failed.
