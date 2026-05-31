@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
 
     private static native void nativeInit(int w, int h, AssetManager assets);
     private static native void nativeSetActivity(MainActivity act);
+    private static native void nativeCaptureGPU();
     private static native void nativeResize(int w, int h);
     private static native void nativeRender();
     private static native void nativeTouchDown(float x, float y);

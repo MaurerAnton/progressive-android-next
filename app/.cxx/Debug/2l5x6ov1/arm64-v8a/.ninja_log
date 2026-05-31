@@ -1,3 +1,7 @@
 # ninja log v5
 0	1595	1780263199485043732	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
 1596	1621	1780263199521710573	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
+3	1653	1780263389502598931	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
+1653	1681	1780263389539265767	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973
+3	1598	1780263481812803271	CMakeFiles/progressivenext.dir/main.cpp.o	1fd81d8bb20e6e52
+1598	1629	1780263481852803282	/home/bym/games/progressive-android-next/app/build/intermediates/cxx/Debug/2l5x6ov1/obj/arm64-v8a/libprogressivenext.so	29e30b105c717973

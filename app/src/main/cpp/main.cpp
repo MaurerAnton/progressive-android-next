@@ -1640,15 +1640,6 @@ static bool initGL(JNIEnv*env,jobject am){
     snprintf(G.login.pass,64,"temproacc5");
     G.login.passLen=strlen(G.login.pass);
     genData();G.screen=SCR_SERVER;G.ds=DS_CLOSED;layoutUI();G.init=true;
-    /* GPU framebuffer capture for verification */
-    frame();
-    unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
-    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
-    FILE*f=fopen("/data/data/chat.progressive.app.next/gpu_screenshot.ppm","wb");
-    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
-        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
-        fclose(f);LOGI("GPU screenshot saved %dx%d",G.w,G.h);}
-    free(gpx);
     LOGI("init ok");return true;
 }
 
@@ -1682,6 +1673,18 @@ Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
         if(G.screen==SCR_SERVER&&++autoLoginFrames>120&&autoLoginFrames<130){
             matrixLogin("@temp:progressive.chat","temproacc5");
             autoLoginFrames=1000; /* fire once */
+        }
+        /* Auto-capture GPU framebuffer every 5s for VLM testing */
+        static int capFrames=0;
+        if(G.init&&++capFrames%300==0){
+            unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+            glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+            char fname[128];snprintf(fname,128,"/data/data/chat.progressive.app.next/gpu_%d.ppm",capFrames/300);
+            FILE*f=fopen(fname,"wb");
+            if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+                for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+                fclose(f);}
+            free(gpx);
         }
         if(!G.touching&&fabsf(G.sv)>0.5f){G.sy+=G.sv;G.sv*=0.92f;}
         frame();
@@ -1860,6 +1863,14 @@ Java_chat_progressive_app_next_MainActivity_nativeOnMatrixResult(JNIEnv* env,jcl
         G.mtxState=MTX_LOGGED_IN;
         parseSyncResponse(env,json);
     }
+    /* GPU capture on Matrix result */
+    {unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+    FILE*f=fopen("/data/data/chat.progressive.app.next/gpu_mtx.ppm","wb");
+    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+        fclose(f);LOGI("GPU mtx captured");}
+    free(gpx);}
     env->ReleaseStringUTFChars(jjson,json);
 }
 
@@ -1870,5 +1881,17 @@ Java_chat_progressive_app_next_MainActivity_nativeOnMatrixError(JNIEnv* env,jcla
     G.mtxState=MTX_ERROR;
     snprintf(G.mtxError,128,"%.120s",err);
     env->ReleaseStringUTFChars(jerr,err);
+}
+
+JNIEXPORT void JNICALL
+Java_chat_progressive_app_next_MainActivity_nativeCaptureGPU(JNIEnv*,jclass){
+    if(!G.init)return;
+    unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
+    glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
+    FILE*f=fopen("/data/data/chat.progressive.app.next/gpu_cap.ppm","wb");
+    if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
+        for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
+        fclose(f);LOGI("GPU capture saved %dx%d",G.w,G.h);}
+    free(gpx);
 }
 }
