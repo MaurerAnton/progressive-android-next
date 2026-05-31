@@ -85,6 +85,7 @@ struct Message{const char*nick,*text;int h,m;int ci;char type;};
 struct Room{const char*name,*topic;std::vector<Message>msgs;int unread;};
 enum Screen{SCR_SERVER,SCR_MATRIX,SCR_IRC,SCR_SIGNUP,SCR_PROFILE,SCR_SETTINGS,SCR_ROOMINFO,SCR_CHATLIST,SCR_CHAT};
 enum DrawerState{DS_CLOSED,DS_OPEN};
+enum MtxState{MTX_IDLE,MTX_CONNECTING,MTX_LOGGED_IN,MTX_ERROR};
 
 static struct{
     bool init;int w,h;float dp; /* density scale: 1sp = dp px */
@@ -97,6 +98,7 @@ static struct{
     int longPressIdx;bool ctxMenu;float ctxMX,ctxMY;
     int activeRoom;float sy,sv,ms;
     Screen prevScreen;
+    MtxState mtxState;char mtxError[128];
     int sid;float sl;
     DrawerState ds;float dx,dw;
     Button btns[20];int nb,ab;
@@ -884,6 +886,24 @@ static void renderChatList(){
     txt((G.w-msr("Progressive Chat v0.5.5-pre",10.0f*G.dp))*0.5f,G.h-20.0f,"Progressive Chat v0.5.5-pre",10.0f*G.dp,Vec4{C_HINT});
 }
 
+/* ===== Matrix status overlay ===== */
+static void renderMtxStatus(){
+    if(G.mtxState==MTX_IDLE)return;
+    float bw=200.0f,bh=48.0f*G.dp;
+    float bx=(G.w-bw)*0.5f,by=G.h*0.5f-bh*0.5f;
+    rrct(bx,by,bw,bh,12.0f,Vec4{0.10f,0.10f,0.22f,0.92f});
+    if(G.mtxState==MTX_CONNECTING){
+        txt(bx+(bw-msr("Connecting...",14.0f*G.dp))*0.5f,by+bh*0.65f,"Connecting...",14.0f*G.dp,Vec4{C_CYAN});
+    }else if(G.mtxState==MTX_LOGGED_IN){
+        txt(bx+(bw-msr("Connected",14.0f*G.dp))*0.5f,by+bh*0.65f,"Connected",14.0f*G.dp,Vec4{C_GREEN});
+        G.mtxState=MTX_IDLE;
+    }else if(G.mtxState==MTX_ERROR){
+        txt(bx+(bw-msr("Error",14.0f*G.dp))*0.5f,by+bh*0.35f,"Error",14.0f*G.dp,Vec4{0.95f,0.35f,0.35f,1.0f});
+        char eb[100];snprintf(eb,100,"%.40s",G.mtxError);
+        txt(bx+(bw-msr(eb,9.0f*G.dp))*0.5f,by+bh*0.75f,eb,9.0f*G.dp,Vec4{C_LABEL});
+    }
+}
+
 /* ====== CHAT SCREEN ====== */
 static void renderDrawer(){
     if(G.ds==DS_CLOSED&&G.dx<1.0f)return;
@@ -1127,6 +1147,7 @@ static void renderChat(){
 static void frame(){
     glClearColor(C_BG);glClear(GL_COLOR_BUFFER_BIT);
     switch(G.screen){case SCR_SERVER:renderServerSelect();break;case SCR_MATRIX:renderMatrixLogin();break;case SCR_IRC:renderIrcAuth();break;case SCR_SIGNUP:renderSignup();break;case SCR_PROFILE:renderProfile();break;case SCR_SETTINGS:renderSettings();break;case SCR_ROOMINFO:renderRoomInfo();break;case SCR_CHATLIST:renderChatList();break;case SCR_CHAT:renderChat();break;}
+    renderMtxStatus();
 }
 
 /* ====== TOUCH ====== */
@@ -1542,6 +1563,7 @@ static void callJavaMethod(const char* name){
 }
 
 static void matrixLogin(const char* user,const char* pass){
+    G.mtxState=MTX_CONNECTING;
     if(!gJvm||!gActivityClass||!gActivityObj)return;
     JNIEnv* env;bool detach=false;
     int st=gJvm->GetEnv((void**)&env,JNI_VERSION_1_6);
@@ -1660,8 +1682,10 @@ Java_chat_progressive_app_next_MainActivity_nativeOnMatrixResult(JNIEnv* env,jcl
     if(strcmp(type,"login")==0){
         const char* uid=jsonVal(json,"user_id");
         if(*uid){strncpy(G.login.user,uid,63);G.login.userLen=strlen(G.login.user);}
+        G.mtxState=MTX_LOGGED_IN;
         matrixSync();
     }else{
+        G.mtxState=MTX_LOGGED_IN;
         parseSyncResponse(env,json);
     }
     env->ReleaseStringUTFChars(jjson,json);
@@ -1671,6 +1695,8 @@ JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeOnMatrixError(JNIEnv* env,jclass,jstring jerr){
     const char* err=env->GetStringUTFChars(jerr,nullptr);
     LOGE("Matrix error: %s",err);
+    G.mtxState=MTX_ERROR;
+    snprintf(G.mtxError,128,"%.120s",err);
     env->ReleaseStringUTFChars(jerr,err);
 }
 }
