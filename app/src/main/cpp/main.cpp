@@ -576,7 +576,7 @@ static void renderServerSelect(){
     G.btns[2].rect={pad,y,fw,btnH};G.btns[2].text="Test without account";G.btns[2].color=Vec4{0.15f,0.65f,0.35f,1.0f};btn(G.btns[2],12.0f*G.dp);
     /* No account needed hint */
     y+=btnH+4.0f*G.dp;
-    txt((G.w-msr("No account needed to try",10.0f*G.dp))*0.5f,y,"No account needed to try",10.0f*G.dp,Vec4{C_HINT});
+    txt((G.w-msr("No account needed to try",10.0f*G.dp))*0.5f,y,"No account needed | Data charges may apply",10.0f*G.dp,Vec4{C_HINT});
     y+=16.0f*G.dp;
     /* Settings gear at bottom-right */
     G.btns[3].rect={G.w-50.0f,G.h-50.0f,40.0f,40.0f};G.btns[3].text="#";G.btns[3].color=Vec4{C_DARK};btn(G.btns[3],16.0f*G.dp);
