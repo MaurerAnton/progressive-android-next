@@ -978,6 +978,9 @@ static void renderChatList(){
         char sbuf[32];snprintf(sbuf,32,"%s Syncing...",spins[(sf/15)%4]);
         txt(pad+(fw-msr(sbuf,11.0f*G.dp))*0.5f,y+14.0f*G.dp,sbuf,11.0f*G.dp,Vec4{C_CYAN});
     }
+    /* Loading more indicator */
+    txt(pad+(fw-msr("Pull down to refresh",11.0f*G.dp))*0.5f,y+8.0f*G.dp,"Pull down to refresh",11.0f*G.dp,Vec4{C_HINT});
+    y+=22.0f*G.dp;
     /* Profile button at bottom */
     float btnH=36.0f*G.dp;
     float by=G.h-btnH-30.0f*G.dp;
