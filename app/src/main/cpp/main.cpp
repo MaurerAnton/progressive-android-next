@@ -445,6 +445,9 @@ static void renderServerSelect(){
     txt((G.w-msr("What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp))*0.5f,y+15.0f*G.dp,"What's new in v0.5.5: Matrix backend, reactions, threads",11.0f*G.dp,Vec4{C_CYAN});
     y+=28.0f*G.dp;
 
+    /* Privacy notice */
+    rct(G.w*0.05f,y,G.w*0.9f,1.0f,Vec4{C_DIVIDER});
+    y+=4.0f*G.dp;
     /* Profile avatar placeholder (top right) */
     float avR=18.0f*G.dp,avX=G.w-avR*2-8.0f,avY=G.h*0.02f+avR*2+12.0f*G.dp;
     rrct(avX,avY,avR*2,avR*2,avR,Vec4{0.45f,0.35f,0.70f,1.0f});
