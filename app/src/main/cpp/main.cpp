@@ -271,6 +271,10 @@ static void genData(){
     rw.msgs.push_back({nullptr,strdup("--> alice joined #welcome"),9,5,0,0});
     /* Add a long message to test word wrap */
     rw.msgs.push_back({strdup("alice"),strdup("This is a very long message that should wrap across multiple lines to demonstrate the word wrap functionality in the chat renderer properly"),9,6,0,0});
+    /* Add reaction messages */
+    rw.msgs.push_back({strdup("bob"),strdup("+1"),9,7,0,7});
+    rw.msgs.push_back({strdup("charlie"),strdup("heart"),9,8,0,7});
+    rw.msgs.push_back({strdup("alice"),strdup("laugh"),9,9,0,7});
     for(int i=0;i<159;i++){
         int ni=i%10;int ti=i%(sizeof(texts)/sizeof(texts[0]));
         char tp=0;const char*txt=texts[ti];
@@ -945,8 +949,11 @@ static void renderChat(){
     btn(G.btns[2],14.0f*G.dp); /* Q search */
     btn(G.btns[3],14.0f*G.dp); /* v scroll down */
     txt(120.0f,hdrH*0.75f,r.name,16.0f*G.dp,Vec4{C_WHITE});
-    /* Green connection dot */
-    rrct(120.0f+msr(r.name,16.0f*G.dp)+8.0f,hdrH*0.75f-10.0f*G.dp,10.0f*G.dp,10.0f*G.dp,5.0f*G.dp,Vec4{0.20f,0.72f,0.40f,1.0f});
+    /* Connection dot */
+    Vec4 dotC=Vec4{0.20f,0.72f,0.40f,1.0f}; /* green online */
+    if(G.mtxState==MTX_CONNECTING)dotC=Vec4{0.85f,0.75f,0.25f,1.0f}; /* yellow */
+    else if(G.mtxState==MTX_ERROR)dotC=Vec4{0.95f,0.35f,0.35f,1.0f}; /* red */
+    rrct(120.0f+msr(r.name,16.0f*G.dp)+8.0f,hdrH*0.75f-10.0f*G.dp,10.0f*G.dp,10.0f*G.dp,5.0f*G.dp,dotC);
     if(r.topic)txt(120.0f,hdrH*0.75f+14.0f*G.dp,r.topic,10.0f*G.dp,Vec4{C_LABEL});
     rct(0,hdrH,(float)G.w,1.0f,Vec4{C_DIVIDER});
 
@@ -1052,9 +1059,15 @@ static void renderChat(){
                 txt(bx+ar*2+16.0f,by+lh*0.75f,ts,10.0f*G.dp,Vec4{C_TS});
                 txt(bx+ar*2+16.0f+msr(ts,10.0f*G.dp)+4.0f,by+lh*0.75f,m.nick,tsz,nc,1.05f);
             }
-            /* Text start position */
+            /* Type indicator on first line */
             float ttx=bx+ar*2+16.0f+msr("[00:00]",10.0f*G.dp)+4.0f+msr(m.nick,tsz)+4.0f;
             if(grouped)ttx=bx+14.0f*G.dp;
+            /* Reaction: show as colored pill */
+            if(m.type==7){
+                rrct(ttx,my+lh*0.15f,msr(m.text,10.0f*G.dp)+16.0f,lh*0.85f,lh*0.4f,Vec4{0.15f,0.12f,0.25f,1.0f});
+                txt(ttx+8.0f,my+lh*0.70f,m.text,10.0f*G.dp,Vec4{C_PURPLE});
+                continue;
+            }
             const char* tpref="";Vec4 tc=nc;
             if(m.type==1){tpref="[IMG] ";tc=Vec4{0.30f,0.65f,0.85f,1.0f};}
             else if(m.type==2){tpref="[FILE] ";tc=Vec4{0.85f,0.65f,0.30f,1.0f};}
@@ -1062,6 +1075,7 @@ static void renderChat(){
             else if(m.type==4){tpref="[POLL] ";tc=Vec4{0.25f,0.70f,0.55f,1.0f};}
             else if(m.type==5){tpref="[MAP] ";tc=Vec4{0.85f,0.45f,0.45f,1.0f};}
             else if(m.type==6){tpref="[REPLY] ";tc=Vec4{0.60f,0.60f,0.65f,1.0f};}
+            else if(m.type==7){tpref="";tc=nc;} /* reaction */
             float textW=G.w-ttx-20.0f*G.dp;
             float lx=ttx,ly=by;
             if(!grouped&&m.type>0){txt(ttx,by+lh*0.75f,tpref,10.0f*G.dp,tc,1.0f);ttx+=msr(tpref,10.0f*G.dp);lx=ttx;}
