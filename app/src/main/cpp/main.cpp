@@ -106,6 +106,7 @@ static struct{
     float tx,ty;bool touching;
     std::vector<Room> rooms;
     AAssetManager* amgr;
+    bool captureNext;
 }G;
 
 /* Forward declarations for Matrix JNI bridge */
@@ -321,14 +322,14 @@ static void genData(){
 }
 
 static int captureCount=0;
-static void gpuCapture(){
+static void gpuCapture(const char* label){
     unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
     glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
-    char fn[128];snprintf(fn,128,"/data/data/chat.progressive.app.next/gpu_%d.ppm",captureCount++);
+    char fn[128];snprintf(fn,128,"/data/data/chat.progressive.app.next/gpu_%s.ppm",label);
     FILE*f=fopen(fn,"wb");
     if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
         for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
-        fclose(f);LOGI("GPU cap %d saved",captureCount-1);}
+        fclose(f);LOGI("GPU cap %s saved",label);}
     free(gpx);
 }
 static void layoutUI(){
@@ -1436,7 +1437,7 @@ static void td(float x,float y){
         int hh=hitB(x,y);
         if(hh>=0&&hh<=4){G.btns[hh].pressed=true;G.ab=hh;return;}
         float hdrH=84.0f*G.dp;
-        if(y<hdrH){G.screen=SCR_ROOMINFO;layoutUI();return;}
+        if(y<hdrH){G.screen=SCR_ROOMINFO;layoutUI();G.captureNext=true;return;}
         float msgTop=hdrH+4.0f;
         float relY=y-msgTop+G.sy;
         Room&r=G.rooms[G.activeRoom];
@@ -1490,7 +1491,7 @@ static void tu(float x,float y){
         if(G.login.profileNickLen>0){
             Room&r=G.rooms[G.activeRoom];
             if(G.longPressIdx<(int)r.msgs.size()&&r.msgs[G.longPressIdx].nick){
-                G.screen=SCR_PROFILE;layoutUI();G.sid=0;return;
+                G.screen=SCR_PROFILE;layoutUI();G.captureNext=true;G.sid=0;return;
             }
         }
         G.sid=0;
@@ -1510,32 +1511,32 @@ static void tu(float x,float y){
                 if(i==0){LOGI("Sign In");
                     if(G.login.selProtocol==0)G.screen=SCR_MATRIX;
                     else if(G.login.selProtocol==1)G.screen=SCR_IRC;
-                    layoutUI();}
-                else if(i==1){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();}
-                else if(i==2){LOGI("Test");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();gpuCapture();}
-                else if(i==3){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();}
+                    layoutUI();G.captureNext=true;}
+                else if(i==1){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();G.captureNext=true;}
+                else if(i==2){LOGI("Test");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;}
+                else if(i==3){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();G.captureNext=true;}
                 else if(i==4){G.login.cat=0;G.login.selProtocol=0;}
                 else if(i==5){G.login.cat=1;G.login.selProtocol=0;}
                 else if(i>=6&&i<=11){G.login.selProtocol=i-6;} /* select card */
             }
             else if(G.screen==SCR_MATRIX){
-                if(i==0){LOGI("Back");G.screen=SCR_SERVER;G.login.focusField=0;layoutUI();}
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;G.login.focusField=0;layoutUI();G.captureNext=true;}
                 else if(i==1){LOGI("Sign in");
                     G.login.hsUrl[G.login.hsLen]=0;
                     G.login.user[G.login.userLen]=0;
                     G.login.pass[G.login.passLen]=0;
                     matrixLogin(G.login.user,G.login.pass);}
-                else if(i==2){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();}
+                else if(i==2){LOGI("Create account");G.screen=SCR_SIGNUP;layoutUI();G.captureNext=true;}
                 /* i==3,4,5 are field touch areas */
                 else if(i==3)G.login.focusField=1;
                 else if(i==4)G.login.focusField=2;
                 else if(i==5)G.login.focusField=3;
             }
             else if(G.screen==SCR_SIGNUP){
-                if(i==0){LOGI("Back");G.screen=SCR_MATRIX;layoutUI();}
+                if(i==0){LOGI("Back");G.screen=SCR_MATRIX;layoutUI();G.captureNext=true;}
             }
             else if(G.screen==SCR_PROFILE){
-                if(i==0){G.screen=SCR_CHATLIST;G.login.filterUser=-1;layoutUI();}
+                if(i==0){G.screen=SCR_CHATLIST;G.login.filterUser=-1;layoutUI();G.captureNext=true;}
                 else if(i==1){ /* Send message - open DM */
                     /* Create DM room if not exists */
                     char dmName[64];snprintf(dmName,64,"@%s",G.login.profileNick);
@@ -1547,35 +1548,35 @@ static void tu(float x,float y){
                         Room dm;dm.name=strdup(dmName);dm.topic="Direct message";dm.unread=0;
                         G.rooms.push_back(dm);G.activeRoom=G.rooms.size()-1;
                     }
-                    G.login.filterUser=-1;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();
+                    G.login.filterUser=-1;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;
                 }
                 else if(i==2){ /* View details - filter to this user */
                     G.login.filterUser=G.login.profileNickLen>0?1:0;
-                    G.screen=SCR_CHAT;layoutUI();
+                    G.screen=SCR_CHAT;layoutUI();G.captureNext=true;
                 }
                 else if(i==3){ /* Mention - add to input */
                     snprintf(G.login.mention,64,"@%s ",G.login.profileNick);
                     G.login.mentionLen=strlen(G.login.mention);
-                    G.screen=SCR_CHAT;layoutUI();
+                    G.screen=SCR_CHAT;layoutUI();G.captureNext=true;
                 }
-                else if(i==4){G.screen=SCR_CHAT;G.login.filterUser=-1;layoutUI();}
+                else if(i==4){G.screen=SCR_CHAT;G.login.filterUser=-1;layoutUI();G.captureNext=true;}
             }
             else if(G.screen==SCR_SETTINGS){
-                if(i==0){LOGI("Back");G.screen=G.prevScreen;layoutUI();}
+                if(i==0){LOGI("Back");G.screen=G.prevScreen;layoutUI();G.captureNext=true;}
                 else if(i>=1&&i<=5){G.login.notifsOn=!G.login.notifsOn;} /* toggle */
             }
             else if(G.screen==SCR_ROOMINFO){
-                if(i==0){G.screen=SCR_CHAT;layoutUI();}
+                if(i==0){G.screen=SCR_CHAT;layoutUI();G.captureNext=true;}
                 else if(i==1){G.login.notifsOn=!G.login.notifsOn;} /* toggle notifications */
-                else if(i==2){G.screen=SCR_CHAT;G.login.searchMode=true;G.login.searchQLen=0;layoutUI();} /* search */
+                else if(i==2){G.screen=SCR_CHAT;G.login.searchMode=true;G.login.searchQLen=0;layoutUI();G.captureNext=true;} /* search */
                 /* i=4: Leave room - todo */
             }
             else if(G.screen==SCR_IRC){
-                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
+                if(i==0){LOGI("Back");G.screen=SCR_SERVER;layoutUI();G.captureNext=true;}
                 else if(i==1){G.login.tls=!G.login.tls;G.btns[1].color=G.login.tls?Vec4{0.18f,0.70f,0.40f,1.0f}:Vec4{0.35f,0.35f,0.40f,1.0f};}
-                else if(i==2){LOGI("Connect");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();}
+                else if(i==2){LOGI("Connect");G.screen=SCR_CHATLIST;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;}
             }else if(G.screen==SCR_CHAT){
-                if(i==0){LOGI("Back");G.login.searchMode=false;G.ctxMenu=false;G.login.replyTo=-1;G.screen=SCR_CHATLIST;layoutUI();}
+                if(i==0){LOGI("Back");G.login.searchMode=false;G.ctxMenu=false;G.login.replyTo=-1;G.screen=SCR_CHATLIST;layoutUI();G.captureNext=true;}
                 else if(i==1){G.ds=G.ds==DS_CLOSED?DS_OPEN:DS_CLOSED;G.dx=G.ds==DS_OPEN?G.dw:0;}
                 else if(i==2){G.login.searchMode=!G.login.searchMode;if(G.login.searchMode){G.login.searchQLen=0;G.login.focusField=5;}}
                 else if(i==3){G.sy=G.ms;} /* scroll to bottom */
@@ -1599,15 +1600,15 @@ static void tu(float x,float y){
                     layoutUI();
                 }
             }else if(G.screen==SCR_CHATLIST){
-                if(i==7){LOGI("Back");G.screen=SCR_SERVER;layoutUI();}
-                else if(i==0){LOGI("Search");G.login.searchMode=true;G.login.searchQLen=0;G.screen=SCR_CHAT;layoutUI();}
-                else if(i==1){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();}
+                if(i==7){LOGI("Back");G.screen=SCR_SERVER;layoutUI();G.captureNext=true;}
+                else if(i==0){LOGI("Search");G.login.searchMode=true;G.login.searchQLen=0;G.screen=SCR_CHAT;layoutUI();G.captureNext=true;}
+                else if(i==1){LOGI("Settings");G.prevScreen=G.screen;G.screen=SCR_SETTINGS;layoutUI();G.captureNext=true;}
                 else if(i==8){ /* Profile */
                     snprintf(G.login.profileNick,32,"me");G.login.profileNickLen=2;
-                    G.prevScreen=G.screen;G.screen=SCR_PROFILE;layoutUI();
+                    G.prevScreen=G.screen;G.screen=SCR_PROFILE;layoutUI();G.captureNext=true;
                 }
                 else if(i>=2&&i<=6){ /* Room tap */
-                    G.activeRoom=i-2;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();gpuCapture();
+                    G.activeRoom=i-2;G.screen=SCR_CHAT;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;
                 }
             }
         }
@@ -1764,18 +1765,20 @@ Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
             matrixLogin("@temp:progressive.chat","temproacc5");
             autoLoginFrames=1000; /* fire once */
         }
-        /* Auto-capture GPU framebuffer every 5s for VLM testing */
-        static int capFrames=0;
-        if(G.init&&++capFrames%300==0){
-            unsigned char*gpx=(unsigned char*)malloc(G.w*G.h*3);
-            glReadPixels(0,0,G.w,G.h,GL_RGB,GL_UNSIGNED_BYTE,gpx);
-            char fname[128];snprintf(fname,128,"/data/data/chat.progressive.app.next/gpu_%d.ppm",capFrames/300);
-            FILE*f=fopen(fname,"wb");
-            if(f){fprintf(f,"P6\n%d %d\n255\n",G.w,G.h);
-                for(int y=G.h-1;y>=0;y--)fwrite(gpx+y*G.w*3,1,G.w*3,f);
-                fclose(f);}
-            free(gpx);
+        /* Auto-capture GPU framebuffer on screen transitions */
+        if(G.captureNext){
+            const char* screenNames[]={"server","matrix","irc","signup","profile","settings","roominfo","chatlist","chat"};
+            gpuCapture(screenNames[G.screen]);
+            G.captureNext=false;
         }
+        /* Command file: read /data/local/tmp/pnext_cmd for screen switching */
+        {FILE* cf=fopen("/data/local/tmp/pnext_cmd","r");
+        if(cf){int sc=-1;if(fscanf(cf,"%d",&sc)==1&&sc>=0&&sc<=8){
+            if(sc==7||sc==8){if(G.rooms.empty())genData();if(G.activeRoom<0||G.activeRoom>=(int)G.rooms.size())G.activeRoom=0;}
+            if(sc==4){snprintf(G.login.profileNick,32,"alice");G.login.profileNickLen=5;}
+            if(sc==6&&G.activeRoom<0)G.activeRoom=0;
+            G.screen=(Screen)sc;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;
+        }fclose(cf);remove("/data/local/tmp/pnext_cmd");}}
         if(!G.touching&&fabsf(G.sv)>0.5f){G.sy+=G.sv;G.sv*=0.92f;}
         frame();
     }
