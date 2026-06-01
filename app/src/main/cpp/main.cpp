@@ -1773,11 +1773,15 @@ Java_chat_progressive_app_next_MainActivity_nativeRender(JNIEnv*,jclass){
         }
         /* Command file: read /data/local/tmp/pnext_cmd for screen switching */
         {FILE* cf=fopen("/data/local/tmp/pnext_cmd","r");
-        if(cf){int sc=-1;if(fscanf(cf,"%d",&sc)==1&&sc>=0&&sc<=8){
+        if(cf){int sc=-1,sy=-1;int n=fscanf(cf,"%d %d",&sc,&sy);
+            if(n>=1&&sc>=0&&sc<=8){
             if(sc==7||sc==8){if(G.rooms.empty())genData();if(G.activeRoom<0||G.activeRoom>=(int)G.rooms.size())G.activeRoom=0;}
             if(sc==4){snprintf(G.login.profileNick,32,"alice");G.login.profileNickLen=5;}
             if(sc==6&&G.activeRoom<0)G.activeRoom=0;
-            G.screen=(Screen)sc;G.ds=DS_CLOSED;G.dx=0;G.sy=0;layoutUI();G.captureNext=true;
+            G.screen=(Screen)sc;G.ds=DS_CLOSED;G.dx=0;
+            if(n>=2&&sy>=0)G.sy=(float)sy;
+            else G.sy=0;
+            layoutUI();G.captureNext=true;
         }fclose(cf);remove("/data/local/tmp/pnext_cmd");}}
         if(!G.touching&&fabsf(G.sv)>0.5f){G.sy+=G.sv;G.sv*=0.92f;}
         frame();
