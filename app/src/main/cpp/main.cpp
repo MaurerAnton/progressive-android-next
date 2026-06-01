@@ -1631,8 +1631,6 @@ static bool initGL(JNIEnv*env,jobject am){
     /* Store JVM for Matrix callbacks */
     env->GetJavaVM(&gJvm);
     jclass cls=env->GetObjectClass(am);
-    gActivityClass=(jclass)env->NewGlobalRef(cls);
-    /* Get MainActivity instance via AssetManager's context... use a simpler approach */
     G.amgr=AAssetManager_fromJava(env,am);if(!G.amgr)return false;
     G.prog=mkP(kVS,kFS);if(!G.prog)return false;
     G.uMVP=glGetUniformLocation(G.prog,"uMVP");
@@ -1738,6 +1736,7 @@ extern "C"{
 JNIEXPORT void JNICALL
 Java_chat_progressive_app_next_MainActivity_nativeSetActivity(JNIEnv*env,jclass,jobject act){
     gActivityObj=env->NewGlobalRef(act);
+    gActivityClass=(jclass)env->NewGlobalRef(env->GetObjectClass(act));
     LOGI("Activity stored");
 }
 
